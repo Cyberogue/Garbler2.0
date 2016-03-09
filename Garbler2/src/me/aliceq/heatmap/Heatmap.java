@@ -23,13 +23,24 @@
  */
 package me.aliceq.heatmap;
 
+import java.util.ArrayList;
+
 /**
  * An extension of a Heatlist which provides key-based access using a sorted
- * list
+ * list. Accesses are performed in O(logn);
  *
  * @author Alice Quiros <email@aliceq.me>
  * @param <K> the type of object used as a key
  */
 public class Heatmap<K> {
 
+    protected Heatlist values;
+    protected ArrayList<K> keys;
+    
+    void Heatmap(){
+        values = new Heatlist();
+        keys = new ArrayList();
+    }
+    
+    
 }

@@ -24,27 +24,37 @@
 package me.aliceq.heatmap;
 
 /**
- * Parent class for BoundedHeatlist and UnboundHeatlist
+ * A class containing a list of floating point values with normalized and
+ * unnormalized methods.
  *
  * @author Alice Quiros <email@aliceq.me>
  */
-public abstract class Heatlist {
+public class Heatlist {
 
-    protected int samples;
-    protected final float[] values;
+    private int samples;
+    private float[] values;
+    private boolean normalized; // Turned off if an unnormalizing method is called
+
+    /**
+     * Constructor for a single-element Heatlist
+     */
+    public Heatlist() {
+        this(1);
+    }
 
     /**
      * Constructor
      *
-     * @param size the number of keys (indeces) in the Heatlist
+     * @param size the number of elements (indeces) in the Heatlist
      */
     public Heatlist(int size) {
         if (size <= 0) {
             throw new IllegalArgumentException("Unable to make Heatlist of size " + size);
         }
 
-        this.samples = 0;
-        this.values = new float[size];
+        samples = 0;
+        values = new float[size];
+        normalized = true;
     }
 
     /**
@@ -54,24 +64,6 @@ public abstract class Heatlist {
      */
     public int getSampleCount() {
         return samples;
-    }
-
-    /**
-     * Checks whether or not a Heatlist is empty
-     *
-     * @return false if the sample size is less than 1
-     */
-    public boolean empty() {
-        return samples <= 0;
-    }
-
-    /**
-     * Sets the sample count
-     *
-     * @param samples the number of samples
-     */
-    protected void setSampleCount(int samples) {
-        this.samples = samples;
     }
 
     /**
@@ -106,64 +98,16 @@ public abstract class Heatlist {
     }
 
     /**
-     * Increments a given index by 1
-     *
-     * @param index the index to increment
-     * @return the new value at the given index
-     */
-    public float increment(int index) {
-        return increment(index, 1);
-    }
-
-    /**
-     * Increments a given index by some amount of samples
-     *
-     * @param index the index to increment
-     * @param amount the number of samples to increment
-     * @return the new value at the given index
-     */
-    public float increment(int index, int amount) {
-        if (index < 0 || index >= values.length) {
-            throw new ArrayIndexOutOfBoundsException();
-        } else if (amount <= 0) {
-            throw new IllegalArgumentException("Count has to be greater than zero");
-        }
-
-        samples += amount;
-        float invweight = 1 - (float) amount / samples;
-
-        for (int i = 0; i < values.length; i++) {
-            values[i] *= invweight;
-        }
-        return values[index] += (float) amount / samples;// values[index] += count / samples;
-    }
-
-    /**
-     * Resets all values in the map to zero
-     */
-    public void reset() {
-        for (int i = 0; i < values.length; i++) {
-            values[i] = 0;
-        }
-    }
-
-    /**
-     * Clears all values and samples in the map
-     */
-    public void clear() {
-        for (int i = 0; i < values.length; i++) {
-            values[i] = 0;
-        }
-        samples = 0;
-    }
-
-    /**
      * Returns the sum of all values
      *
      * @return the sum of all values
      */
     public float getTotal() {
-        return getSum(0, values.length);
+        float sum = 0;
+        for (int i = 0; i < values.length; i++) {
+            sum += values[i];
+        }
+        return sum;
     }
 
     /**
@@ -311,6 +255,128 @@ public abstract class Heatlist {
         return -1;
     }
 
+    /**
+     * Increments a given index by 1
+     *
+     * @param index the index to increment
+     * @return the new value at the given index
+     */
+    public float increment(int index) {
+        return increment(index, 1);
+    }
+
+    /**
+     * Increments a given index by some amount of samples.
+     *
+     * @param index the index to increment
+     * @param amount the number of samples to increment
+     * @return the new value at the given index
+     */
+    public float increment(int index, int amount) {
+        if (index < 0 || index >= values.length) {
+            throw new ArrayIndexOutOfBoundsException();
+        } else if (amount <= 0) {
+            throw new IllegalArgumentException("Count has to be greater than zero");
+        }
+
+        samples += amount;
+        float weight = (float) amount / samples;
+        float invweight = 1 - weight;
+
+        for (int i = 0; i < values.length; i++) {
+            values[i] *= invweight;
+        }
+        return values[index] += weight;
+    }
+
+    /**
+     * Scales all values in the Heatlist so that their collective sum equals 1.
+     */
+    public void normalize() {
+        float nFactor = 1 / getTotal();  // Normalizing factor
+        for (int i = 0; i < values.length; i++) {
+            values[i] *= nFactor;
+        }
+    }
+
+    /**
+     * Equalizes and normalizes all values in the Heatlist
+     *
+     * @return the equalized value
+     */
+    public float equalize() {
+        float value = 1 / samples;
+        for (int i = 0; i < values.length; i++) {
+            values[i] = value;
+        }
+
+        return value;
+    }
+
+    /**
+     * Resets all values in the map to zero
+     */
+    public void reset() {
+        for (int i = 0; i < values.length; i++) {
+            values[i] = 0;
+        }
+    }
+
+    /**
+     * Clears all values and samples in the map
+     */
+    public void clear() {
+        for (int i = 0; i < values.length; i++) {
+            values[i] = 0;
+        }
+        samples = 0;
+    }
+
+    /**
+     * Checks whether or not a Heatlist is empty
+     *
+     * @return false if the sample size is less than 1
+     */
+    public boolean empty() {
+        return samples <= 0;
+    }
+
+    /**
+     * Verifies that the list is normalized
+     *
+     * @return true when normalized, otherwise false
+     */
+    public boolean isNormalized() {
+        return normalized;
+    }
+
+    /**
+     * Marks a Heatlist as denormalized
+     */
+    public void markDirty() {
+        normalized = false;
+    }
+
+    /**
+     * Creates a new value at an index initialized to 0. Previous values get
+     * shifted right.
+     *
+     * @param index the index to push a zero into
+     */
+    public void addNewAtIndex(int index) {
+        if (index < 0 || index > values.length) {
+            throw new ArrayIndexOutOfBoundsException();
+        }
+
+        float[] newValues = new float[values.length + 1];
+
+        System.arraycopy(values, 0, newValues, 0, index);
+        System.arraycopy(values, index, newValues, index + 1, values.length - index);
+        newValues[index] = 0;
+
+        values = newValues;
+    }
+
     @Override
     public String toString() {
         if (values.length <= 0) {
@@ -323,5 +389,108 @@ public abstract class Heatlist {
         }
         s += "}";
         return s;
+    }
+
+    /**
+     * Create a copy of the Heatlist instance with the same sample count and
+     * values
+     *
+     * @return a copy of the Heatlist instance
+     */
+    public Heatlist copy() {
+        Heatlist map = new Heatlist(values.length);
+        System.arraycopy(values, 0, map.values, 0, values.length);
+        map.samples = samples;
+        return map;
+    }
+
+    /**
+     * Merges two heatlists together. The resulting values are the average of
+     * the two and the resulting sample count is the sum of the two. The result
+     * is normalized if both input lists are normalized. If the lists are of
+     * different sizes an exception is thrown.
+     *
+     * @param a The first heatlist
+     * @param b The second heatlist
+     * @return The average of two Heatlists
+     */
+    public static Heatlist merge(Heatlist a, Heatlist b) {
+        return interpolate(a, b, 0.5f);
+    }
+
+    /**
+     * Merges multiple heatlists together. The resulting values are the average
+     * of all the lists and the resulting sample count is their sum. The result
+     * is normalized if all input lists are normalized. If the lists are of
+     * different sizes an exception is thrown.
+     *
+     * @param lists
+     * @return
+     */
+    public static Heatlist merge(Heatlist[] lists) {
+        Heatlist result = new Heatlist(lists[0].values.length);
+        float weight = 1 / lists[0].values.length;
+
+        for (int i = 0; i < lists.length; i++) {
+            if (lists[i].values.length != lists[0].values.length) {
+                throw new IllegalArgumentException("Referenced heatlists must be of same size");
+            }
+
+            for (int j = 0; j < lists[i].values.length; j++) {
+                result.values[j] += lists[i].values[j] * weight;
+            }
+            result.samples += lists[i].samples;
+            result.normalized &= lists[i].normalized;
+        }
+
+        return result;
+    }
+
+    /**
+     * Interpolates between two Heatlists. The resulting values are interpolated
+     * between both lists and the resulting sample count is the sum of the
+     * two.The result is normalized if both input lists are normalized. If the
+     * lists are of different sizes an exception is thrown.
+     *
+     * @param a
+     * @param b
+     * @param value The interpolation value. A value of 0 returns Heatlist a and
+     * a value of 1 returns Heatlist b.
+     * @return a Heatlist whose values are the average of two other's
+     */
+    public static Heatlist interpolate(Heatlist a, Heatlist b, float value) {
+        if (a.values.length != b.values.length) {
+            throw new IllegalArgumentException("Referenced heatlists must be of same size");
+        } else if (value < 0 || value > 1) {
+            throw new IllegalArgumentException("Interpolation value must be between 0 and 1");
+        }
+
+        float va = value;
+        float vb = 1f - value;
+
+        Heatlist result = new Heatlist(a.values.length);
+        result.samples = a.samples + b.samples;
+        for (int i = 0; i < a.values.length; i++) {
+            result.values[i] = a.values[i] * va + b.values[i] * vb;
+        }
+        result.normalized = a.normalized && b.normalized;
+        return result;
+    }
+
+    /**
+     * Creates a cumulative-sum Heatlist from a source list.
+     *
+     * @param source the source list
+     * @return a new Heatlist
+     */
+    public static Heatlist getCumulative(Heatlist source) {
+        Heatlist result = new Heatlist(source.values.length);
+        float sum = 0;
+        for (int i = 0; i < result.values.length; i++) {
+            sum += source.values[i];
+            result.values[i] = sum;
+        }
+        result.normalized = false;
+        return result;
     }
 }
