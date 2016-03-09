@@ -29,7 +29,7 @@ package me.aliceq.heatmap;
  *
  * @author Alice Quiros <email@aliceq.me>
  */
-public class UnboundHeatlist extends BoundedHeatlist {
+public class UnboundHeatlist extends Heatlist {
 
     /**
      * Constructor
@@ -41,12 +41,39 @@ public class UnboundHeatlist extends BoundedHeatlist {
     }
 
     /**
+     * Overwrites all field values with new values. The source object must be of
+     * the same size as the destination object.
+     *
+     * @param newValues the new values to copy in
+     */
+    protected void overwriteValues(float[] newValues) {
+        if (newValues.length != this.values.length) {
+            throw new IllegalArgumentException("Mismatched array sizes");
+        }
+        overwriteValues(newValues, 0);
+    }
+
+    /**
+     * Overwrites the current value set within a given range
+     *
+     * @param newValues The new values to write in
+     * @param fromIndex the index to start writing into
+     */
+    protected void overwriteValues(float[] newValues, int fromIndex) {
+        if (fromIndex + newValues.length > this.values.length) {
+            throw new IllegalArgumentException("Overwrite range excedes source length");
+        }
+
+        System.arraycopy(newValues, 0, this.values, fromIndex, newValues.length);
+    }
+
+    /**
      * Obtains the cumulative Heatlist of a source Heatlist
      *
      * @param source the source Heatlist
      * @return the cumulative Heatlist of a source Heatlist
      */
-    public static UnboundHeatlist getCumulative(BoundedHeatlist source) {
+    public static UnboundHeatlist getCumulative(Heatlist source) {
         return UnboundHeatlist.getCumulative(source, 0, source.values.length);
     }
 
@@ -60,19 +87,19 @@ public class UnboundHeatlist extends BoundedHeatlist {
      * @return the cumulative Heatlist of a source Heatlist within a provided
      * range
      */
-    public static UnboundHeatlist getCumulative(BoundedHeatlist source, int startIndex, int count) {
+    public static UnboundHeatlist getCumulative(Heatlist source, int startIndex, int count) {
         if (startIndex < 0 || startIndex >= source.values.length || count < 0 || startIndex + count > source.values.length) {
             throw new ArrayIndexOutOfBoundsException();
         }
 
-        UnboundHeatlist map = new UnboundHeatlist(count);
+        UnboundHeatlist list = new UnboundHeatlist(count);
         float sum = 0;
         int endIndex = startIndex + count;
         for (int i = startIndex; i < endIndex; i++) {
             sum += source.values[i];
-            map.values[i - startIndex] = sum;
+            list.values[i - startIndex] = sum;
         }
-        return map;
+        return list;
     }
 
     /**
@@ -83,14 +110,26 @@ public class UnboundHeatlist extends BoundedHeatlist {
      * @param count the number of indeces to count
      * @return a sub-Heatlist of another
      */
-    public static UnboundHeatlist extract(BoundedHeatlist source, int startIndex, int count) {
+    public static UnboundHeatlist extract(Heatlist source, int startIndex, int count) {
         if (startIndex < 0 || startIndex >= source.values.length || count < 0 || startIndex + count > source.values.length) {
             throw new ArrayIndexOutOfBoundsException();
         }
 
-        UnboundHeatlist map = new UnboundHeatlist(count);
-        System.arraycopy(source.values, startIndex, map.values, 0, count);
-        return map;
+        UnboundHeatlist list = new UnboundHeatlist(count);
+        System.arraycopy(source.values, startIndex, list.values, 0, count);
+        return list;
+    }
+
+    /**
+     * Transform a source Heatlist into an unbound heatlist
+     *
+     * @param source the source to copy from
+     * @return a new UnboundHeatlist instance
+     */
+    public static UnboundHeatlist makeFrom(Heatlist source) {
+        UnboundHeatlist list = new UnboundHeatlist(source.values.length);
+        System.arraycopy(source.values, 0, list.values, 0, source.values.length);
+        return list;
     }
 
     /**
@@ -100,7 +139,7 @@ public class UnboundHeatlist extends BoundedHeatlist {
      * @param b
      * @return a new Heatlist instance
      */
-    public static UnboundHeatlist getSum(BoundedHeatlist a, BoundedHeatlist b) {
+    public static UnboundHeatlist getSum(Heatlist a, Heatlist b) {
         UnboundHeatlist result = new UnboundHeatlist(a.values.length);
         for (int i = 0; i < a.values.length; i++) {
             result.values[i] = a.values[i] + b.values[i];
@@ -114,14 +153,17 @@ public class UnboundHeatlist extends BoundedHeatlist {
      *
      * @param a
      * @param b
+     * @param multiplySamples If true, multiply the sample count by b
      * @return a new Heatlist instance
      */
-    public static UnboundHeatlist getProduct(BoundedHeatlist a, float b) {
+    public static UnboundHeatlist getProduct(Heatlist a, float b, boolean multiplySamples) {
         UnboundHeatlist result = new UnboundHeatlist(a.values.length);
         for (int i = 0; i < a.values.length; i++) {
             result.values[i] = a.values[i] * b;
         }
-        result.samples = (int) (a.samples * b);
+        if (multiplySamples) {
+            result.samples = (int) (a.samples * b);
+        }
         return result;
     }
 }

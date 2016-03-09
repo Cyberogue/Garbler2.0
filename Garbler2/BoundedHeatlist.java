@@ -24,11 +24,12 @@
 package me.aliceq.heatmap;
 
 /**
- * Parent class for BoundedHeatlist and UnboundHeatlist
+ * Class which maintains a normalized heat map of float values. At any time the
+ * sum of all values should remain at 1.0f.
  *
  * @author Alice Quiros <email@aliceq.me>
  */
-public abstract class Heatlist {
+public class BoundedHeatlist implements Heatlist {
 
     protected int samples;
     protected final float[] values;
@@ -38,7 +39,7 @@ public abstract class Heatlist {
      *
      * @param size the number of keys (indeces) in the Heatlist
      */
-    public Heatlist(int size) {
+    public BoundedHeatlist(int size) {
         if (size <= 0) {
             throw new IllegalArgumentException("Unable to make Heatlist of size " + size);
         }
@@ -57,15 +58,6 @@ public abstract class Heatlist {
     }
 
     /**
-     * Checks whether or not a Heatlist is empty
-     *
-     * @return false if the sample size is less than 1
-     */
-    public boolean empty() {
-        return samples <= 0;
-    }
-
-    /**
      * Sets the sample count
      *
      * @param samples the number of samples
@@ -79,6 +71,7 @@ public abstract class Heatlist {
      *
      * @return the size of the map
      */
+    @Override
     public int getSize() {
         return values.length;
     }
@@ -88,6 +81,7 @@ public abstract class Heatlist {
      *
      * @return an array of all values in the map
      */
+    @Override
     public float[] getValues() {
         return values.clone();
     }
@@ -98,6 +92,7 @@ public abstract class Heatlist {
      * @param index the index to retrieve
      * @return a floating point value
      */
+    @Override
     public float getValue(int index) {
         if (index < 0 || index >= values.length) {
             throw new ArrayIndexOutOfBoundsException();
@@ -111,6 +106,7 @@ public abstract class Heatlist {
      * @param index the index to increment
      * @return the new value at the given index
      */
+    @Override
     public float increment(int index) {
         return increment(index, 1);
     }
@@ -122,6 +118,7 @@ public abstract class Heatlist {
      * @param amount the number of samples to increment
      * @return the new value at the given index
      */
+    @Override
     public float increment(int index, int amount) {
         if (index < 0 || index >= values.length) {
             throw new ArrayIndexOutOfBoundsException();
@@ -141,6 +138,7 @@ public abstract class Heatlist {
     /**
      * Resets all values in the map to zero
      */
+    @Override
     public void reset() {
         for (int i = 0; i < values.length; i++) {
             values[i] = 0;
@@ -150,6 +148,7 @@ public abstract class Heatlist {
     /**
      * Clears all values and samples in the map
      */
+    @Override
     public void clear() {
         for (int i = 0; i < values.length; i++) {
             values[i] = 0;
@@ -162,7 +161,8 @@ public abstract class Heatlist {
      *
      * @return the sum of all values
      */
-    public float getTotal() {
+    @Override
+    public float getSum() {
         return getSum(0, values.length);
     }
 
@@ -173,6 +173,7 @@ public abstract class Heatlist {
      * @param endIndex the index to search up to (non-inclusive)
      * @return the sum all the of values in a given range
      */
+    @Override
     public float getSum(int startIndex, int endIndex) {
         if (startIndex < 0 || startIndex > values.length || endIndex < 0 || endIndex > values.length) {
             throw new ArrayIndexOutOfBoundsException();
@@ -190,6 +191,7 @@ public abstract class Heatlist {
      *
      * @return the maximum value in the Heatlist
      */
+    @Override
     public float getMax() {
         return getMax(0, values.length);
     }
@@ -201,6 +203,7 @@ public abstract class Heatlist {
      * @param endIndex the index to search up to (non-inclusive)
      * @return the maximum value in a range
      */
+    @Override
     public float getMax(int startIndex, int endIndex) {
         if (startIndex < 0 || startIndex >= values.length || endIndex < 0 || endIndex > values.length) {
             throw new ArrayIndexOutOfBoundsException();
@@ -220,6 +223,7 @@ public abstract class Heatlist {
      *
      * @return the minimum value in the Heatlist
      */
+    @Override
     public float getMin() {
         return getMin(0, values.length);
     }
@@ -231,6 +235,7 @@ public abstract class Heatlist {
      * @param endIndex the index to search up to (non-inclusive)
      * @return the minimum value in a range
      */
+    @Override
     public float getMin(int startIndex, int endIndex) {
         if (startIndex < 0 || startIndex >= values.length || endIndex < 0 || endIndex > values.length) {
             throw new ArrayIndexOutOfBoundsException();
@@ -311,6 +316,34 @@ public abstract class Heatlist {
         return -1;
     }
 
+    /**
+     * Sets every value to an equal value with a total sum of 1.0
+     *
+     * @return the new value of all indeces
+     */
+    @Override
+    public float equalize() {
+        float value = 1 / values.length;
+        for (int i = 0; i < values.length; i++) {
+            values[i] = value;
+        }
+        return value;
+    }
+
+    /**
+     * Create a copy of the Heatlist instance with the same sample count and
+     * values
+     *
+     * @return a copy of the Heatlist instance
+     */
+    @Override
+    public BoundedHeatlist copy() {
+        BoundedHeatlist map = new BoundedHeatlist(this.values.length);
+        System.arraycopy(this.values, 0, map.values, 0, this.values.length);
+        map.samples = this.samples;
+        return map;
+    }
+
     @Override
     public String toString() {
         if (values.length <= 0) {
@@ -323,5 +356,52 @@ public abstract class Heatlist {
         }
         s += "}";
         return s;
+    }
+
+    /**
+     * Returns a Heatlist whose values are the average of two other's
+     *
+     * @param a
+     * @param b
+     * @return a Heatlist whose values are the average of two other's
+     */
+    public static BoundedHeatlist average(BoundedHeatlist a, BoundedHeatlist b) {
+        return interpolate(a, b, 0.5f);
+    }
+
+    /**
+     * Returns a Heatlist whose values are interpolated between two other's
+     *
+     * @param a
+     * @param b
+     * @param value The interpolation value. A value of 0 returns Heatlist a and
+     * a value of 1 returns Heatlist b.
+     * @return a Heatlist whose values are the average of two other's
+     */
+    public static BoundedHeatlist interpolate(BoundedHeatlist a, BoundedHeatlist b, float value) {
+        if (a.values.length != b.values.length) {
+            throw new IllegalArgumentException("Referenced heatmaps must be of same size");
+        } else if (value < 0 || value > 1) {
+            throw new IllegalArgumentException("Interpolation value must be between 0 and 1");
+        }
+
+        float va = value;
+        float vb = 1f - value;
+
+        BoundedHeatlist result = new BoundedHeatlist(a.values.length);
+        result.samples = a.samples + b.samples;
+        for (int i = 0; i < a.values.length; i++) {
+            result.values[i] = a.values[i] * va + b.values[i] * vb;
+        }
+        return result;
+    }
+
+    /**
+     * Returns an unbounded copy of this list
+     *
+     * @return
+     */
+    public UnboundHeatlist getUnbound() {
+        return UnboundHeatlist.extract(this, 0, values.length);
     }
 }

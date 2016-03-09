@@ -24,12 +24,12 @@
 package me.aliceq.heatmap;
 
 /**
- * An extension of a Heatlist which provides key-based access using a sorted list
+ * An extension of a Heatlist which provides key-based access using a sorted
+ * list
  *
  * @author Alice Quiros <email@aliceq.me>
  * @param <K> the type of object used as a key
  */
 public class Heatmap<K> {
-    
-    
+
 }
