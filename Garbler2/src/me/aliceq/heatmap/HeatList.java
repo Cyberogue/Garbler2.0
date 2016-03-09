@@ -6,7 +6,7 @@
  * Permission is hereby granted, free of charge, to any person obtaining a copy
  * of this software and associated documentation files (the "Software"), to deal
  * in the Software without restriction, including without limitation the rights
- * to use, copy, modify, merge, publish, distribute, sublicense, and/or sell
+ * to use, copy, modify, average, publish, distribute, sublicense, and/or sell
  * copies of the Software, and to permit persons to whom the Software is
  * furnished to do so, subject to the following conditions:
  *
@@ -29,8 +29,9 @@ package me.aliceq.heatmap;
  *
  * @author Alice Quiros <email@aliceq.me>
  */
-public class Heatlist {
+public class HeatList {
 
+    private int size;
     private int samples;
     private float[] values;
     private boolean normalized; // Turned off if an unnormalizing method is called
@@ -38,8 +39,8 @@ public class Heatlist {
     /**
      * Constructor for a single-element Heatlist
      */
-    public Heatlist() {
-        this(1);
+    public HeatList() {
+        this(0);
     }
 
     /**
@@ -47,14 +48,15 @@ public class Heatlist {
      *
      * @param size the number of elements (indeces) in the Heatlist
      */
-    public Heatlist(int size) {
-        if (size <= 0) {
-            throw new IllegalArgumentException("Unable to make Heatlist of size " + size);
+    public HeatList(int size) {
+        if (size < 0) {
+            throw new IllegalArgumentException("Unable to make Heatlist of negative size.");
         }
 
-        samples = 0;
-        values = new float[size];
-        normalized = true;
+        this.samples = 0;
+        this.values = new float[size];
+        this.normalized = true;
+        this.size = size;
     }
 
     /**
@@ -71,8 +73,8 @@ public class Heatlist {
      *
      * @return the size of the map
      */
-    public int getSize() {
-        return values.length;
+    public int size() {
+        return size;
     }
 
     /**
@@ -80,7 +82,7 @@ public class Heatlist {
      *
      * @return an array of all values in the map
      */
-    public float[] getValues() {
+    public float[] values() {
         return values.clone();
     }
 
@@ -91,7 +93,7 @@ public class Heatlist {
      * @return a floating point value
      */
     public float getValue(int index) {
-        if (index < 0 || index >= values.length) {
+        if (index < 0 || index >= size) {
             throw new ArrayIndexOutOfBoundsException();
         }
         return values[index];
@@ -104,7 +106,7 @@ public class Heatlist {
      */
     public float getTotal() {
         float sum = 0;
-        for (int i = 0; i < values.length; i++) {
+        for (int i = 0; i < size; i++) {
             sum += values[i];
         }
         return sum;
@@ -118,7 +120,7 @@ public class Heatlist {
      * @return the sum all the of values in a given range
      */
     public float getSum(int startIndex, int endIndex) {
-        if (startIndex < 0 || startIndex > values.length || endIndex < 0 || endIndex > values.length) {
+        if (startIndex < 0 || startIndex > size || endIndex < 0 || endIndex > size) {
             throw new ArrayIndexOutOfBoundsException();
         }
 
@@ -130,12 +132,12 @@ public class Heatlist {
     }
 
     /**
-     * Returns the maximum value in the Heatlist
+     * Returns the maximum value in the HeatList
      *
-     * @return the maximum value in the Heatlist
+     * @return the maximum value in the HeatList
      */
     public float getMax() {
-        return getMax(0, values.length);
+        return getMax(0, size);
     }
 
     /**
@@ -146,7 +148,7 @@ public class Heatlist {
      * @return the maximum value in a range
      */
     public float getMax(int startIndex, int endIndex) {
-        if (startIndex < 0 || startIndex >= values.length || endIndex < 0 || endIndex > values.length) {
+        if (startIndex < 0 || startIndex >= size || endIndex < 0 || endIndex > size) {
             throw new ArrayIndexOutOfBoundsException();
         }
 
@@ -160,12 +162,12 @@ public class Heatlist {
     }
 
     /**
-     * Returns the minimum value in the Heatlist
+     * Returns the minimum value in the HeatList
      *
-     * @return the minimum value in the Heatlist
+     * @return the minimum value in the HeatList
      */
     public float getMin() {
-        return getMin(0, values.length);
+        return getMin(0, size);
     }
 
     /**
@@ -176,7 +178,7 @@ public class Heatlist {
      * @return the minimum value in a range
      */
     public float getMin(int startIndex, int endIndex) {
-        if (startIndex < 0 || startIndex >= values.length || endIndex < 0 || endIndex > values.length) {
+        if (startIndex < 0 || startIndex >= size || endIndex < 0 || endIndex > size) {
             throw new ArrayIndexOutOfBoundsException();
         }
 
@@ -197,7 +199,7 @@ public class Heatlist {
      * -1 if none
      */
     public int indexOfGreater(int threshold) {
-        return indexOfGreater(0, values.length, threshold);
+        return indexOfGreater(0, size, threshold);
     }
 
     /**
@@ -210,7 +212,7 @@ public class Heatlist {
      * -1 if none
      */
     public int indexOfGreater(int startIndex, int endIndex, int threshold) {
-        if (startIndex < 0 || startIndex > values.length || endIndex < 0 || endIndex > values.length) {
+        if (startIndex < 0 || startIndex > size || endIndex < 0 || endIndex > size) {
             throw new ArrayIndexOutOfBoundsException();
         }
 
@@ -230,7 +232,7 @@ public class Heatlist {
      * -1 if none
      */
     public int lastIndexOfGreater(int threshold) {
-        return lastIndexOfGreater(0, values.length, threshold);
+        return lastIndexOfGreater(0, size, threshold);
     }
 
     /**
@@ -243,7 +245,7 @@ public class Heatlist {
      * -1 if none
      */
     public int lastIndexOfGreater(int startIndex, int endIndex, int threshold) {
-        if (startIndex < 0 || startIndex > values.length || endIndex < 0 || endIndex > values.length) {
+        if (startIndex < 0 || startIndex > size || endIndex < 0 || endIndex > size) {
             throw new ArrayIndexOutOfBoundsException();
         }
 
@@ -273,7 +275,7 @@ public class Heatlist {
      * @return the new value at the given index
      */
     public float increment(int index, int amount) {
-        if (index < 0 || index >= values.length) {
+        if (index < 0 || index >= size) {
             throw new ArrayIndexOutOfBoundsException();
         } else if (amount <= 0) {
             throw new IllegalArgumentException("Count has to be greater than zero");
@@ -283,32 +285,34 @@ public class Heatlist {
         float weight = (float) amount / samples;
         float invweight = 1 - weight;
 
-        for (int i = 0; i < values.length; i++) {
+        for (int i = 0; i < size; i++) {
             values[i] *= invweight;
         }
         return values[index] += weight;
     }
 
     /**
-     * Scales all values in the Heatlist so that their collective sum equals 1.
+     * Scales all values in the HeatList so that their collective sum equals 1.
      */
     public void normalize() {
         float nFactor = 1 / getTotal();  // Normalizing factor
-        for (int i = 0; i < values.length; i++) {
+        for (int i = 0; i < size; i++) {
             values[i] *= nFactor;
         }
+        normalized = true;
     }
 
     /**
-     * Equalizes and normalizes all values in the Heatlist
+     * Equalizes and normalizes all values in the HeatList
      *
      * @return the equalized value
      */
     public float equalize() {
         float value = 1 / samples;
-        for (int i = 0; i < values.length; i++) {
+        for (int i = 0; i < size; i++) {
             values[i] = value;
         }
+        normalized = true;
 
         return value;
     }
@@ -317,7 +321,7 @@ public class Heatlist {
      * Resets all values in the map to zero
      */
     public void reset() {
-        for (int i = 0; i < values.length; i++) {
+        for (int i = 0; i < size; i++) {
             values[i] = 0;
         }
     }
@@ -326,14 +330,14 @@ public class Heatlist {
      * Clears all values and samples in the map
      */
     public void clear() {
-        for (int i = 0; i < values.length; i++) {
+        for (int i = 0; i < size; i++) {
             values[i] = 0;
         }
         samples = 0;
     }
 
     /**
-     * Checks whether or not a Heatlist is empty
+     * Checks whether or not a HeatList is empty
      *
      * @return false if the sample size is less than 1
      */
@@ -346,60 +350,128 @@ public class Heatlist {
      *
      * @return true when normalized, otherwise false
      */
-    public boolean isNormalized() {
+    public boolean normalized() {
         return normalized;
     }
 
     /**
-     * Marks a Heatlist as denormalized
+     * Marks a HeatList as denormalized
      */
     public void markDirty() {
         normalized = false;
     }
 
     /**
-     * Creates a new value at an index initialized to 0. Previous values get
-     * shifted right.
+     * Creates a new value initialized to 0. Values to the right of the index
+     * get shifted right.
      *
      * @param index the index to push a zero into
      */
-    public void addNewAtIndex(int index) {
-        if (index < 0 || index > values.length) {
+    public void addNewIndex(int index) {
+        if (index < 0 || index > size) {
             throw new ArrayIndexOutOfBoundsException();
         }
 
-        float[] newValues = new float[values.length + 1];
+        float[] newvalues;
 
-        System.arraycopy(values, 0, newValues, 0, index);
-        System.arraycopy(values, index, newValues, index + 1, values.length - index);
-        newValues[index] = 0;
+        // Target the current array if it has the capacity otherwise make a new array
+        if (++size <= values.length) {
+            newvalues = values;
+        } else {
+            newvalues = new float[size];
+            System.arraycopy(values, 0, newvalues, 0, index);
+        }
 
-        values = newValues;
+        // Iterate through array and shift/copy values
+        for (int i = index + 1; i < size; i++) {
+            newvalues[i] = values[i - 1];
+        }
+
+        // Set new values to zero
+        newvalues[index] = 0;
+
+        // Assign array
+        values = newvalues;
+    }
+
+    /**
+     * Deletes an index from the list. Note that this method is unsafe and risks
+     * de-normalizing the list.
+     *
+     * @param index The index to delete
+     * @return The removed value
+     */
+    public float deleteIndexUnsafe(int index) {
+        if (index < 0 || index >= size) {
+            throw new ArrayIndexOutOfBoundsException();
+        }
+        float oldValue = values[index];
+
+        // Shift elements left
+        System.arraycopy(values, index + 1, values, index, size - index - 1);
+
+        // Decrement size and denormalize
+        if (oldValue >= 0.000001f) {
+            normalized = false;
+        }
+        size--;
+
+        return oldValue;
+    }
+
+    /**
+     * Deletes an index from the list without affecting normalization
+     *
+     * @param index The index to delete
+     * @return The removed value
+     */
+    public float deleteIndex(int index) {
+        if (index < 0 || index >= size) {
+            throw new ArrayIndexOutOfBoundsException();
+        }
+        float oldValue = values[index];
+
+        // Shift elements left
+        System.arraycopy(values, index + 1, values, index, size - index - 1);
+
+        // Decrement size
+        size--;
+
+        // Normalize
+        if (oldValue >= 0.000001f) {
+            float sum = getSum(0, size);
+            float weight = (sum + oldValue) / sum;
+            for (int i = 0; i <= size; i++) {
+                values[i] *= weight;
+            }
+        }
+
+        return oldValue;
     }
 
     @Override
     public String toString() {
-        if (values.length <= 0) {
-            return "";
+        if (size <= 0) {
+            return normalized ? "{}" : "<>";
         }
 
-        String s = "{" + values[0];
-        for (int i = 1; i < values.length; i++) {
+        String s = (normalized ? "{" : "<") + values[0];
+        for (int i = 1; i < size; i++) {
             s += "," + values[i];
         }
-        s += "}";
+        s += (normalized ? "}" : ">");
         return s;
     }
 
     /**
-     * Create a copy of the Heatlist instance with the same sample count and
+     * Create a copy of the HeatList instance with the same sample count and
      * values
      *
-     * @return a copy of the Heatlist instance
+     * @return a copy of the HeatList instance
      */
-    public Heatlist copy() {
-        Heatlist map = new Heatlist(values.length);
-        System.arraycopy(values, 0, map.values, 0, values.length);
+    public HeatList copy() {
+        HeatList map = new HeatList(size);
+        System.arraycopy(values, 0, map.values, 0, size);
         map.samples = samples;
         return map;
     }
@@ -414,7 +486,7 @@ public class Heatlist {
      * @param b The second heatlist
      * @return The average of two Heatlists
      */
-    public static Heatlist merge(Heatlist a, Heatlist b) {
+    public static HeatList average(HeatList a, HeatList b) {
         return interpolate(a, b, 0.5f);
     }
 
@@ -427,20 +499,20 @@ public class Heatlist {
      * @param lists
      * @return
      */
-    public static Heatlist merge(Heatlist[] lists) {
-        Heatlist result = new Heatlist(lists[0].values.length);
-        float weight = 1 / lists[0].values.length;
+    public static HeatList average(HeatList[] lists) {
+        HeatList result = new HeatList(lists[0].size);
+        float weight = 1f / lists.length;
 
-        for (int i = 0; i < lists.length; i++) {
-            if (lists[i].values.length != lists[0].values.length) {
+        for (HeatList list : lists) {
+            if (list.size != lists[0].size) {
                 throw new IllegalArgumentException("Referenced heatlists must be of same size");
             }
-
-            for (int j = 0; j < lists[i].values.length; j++) {
-                result.values[j] += lists[i].values[j] * weight;
+            for (int j = 0; j < list.size; j++) {
+                result.values[j] += list.values[j] * weight;
             }
-            result.samples += lists[i].samples;
-            result.normalized &= lists[i].normalized;
+
+            result.samples += list.samples;
+            result.normalized &= list.normalized;
         }
 
         return result;
@@ -454,12 +526,12 @@ public class Heatlist {
      *
      * @param a
      * @param b
-     * @param value The interpolation value. A value of 0 returns Heatlist a and
-     * a value of 1 returns Heatlist b.
-     * @return a Heatlist whose values are the average of two other's
+     * @param value The interpolation value. A value of 0 returns HeatList a and
+     * a value of 1 returns HeatList b.
+     * @return a HeatList whose values are the average of two other's
      */
-    public static Heatlist interpolate(Heatlist a, Heatlist b, float value) {
-        if (a.values.length != b.values.length) {
+    public static HeatList interpolate(HeatList a, HeatList b, float value) {
+        if (a.size != b.size) {
             throw new IllegalArgumentException("Referenced heatlists must be of same size");
         } else if (value < 0 || value > 1) {
             throw new IllegalArgumentException("Interpolation value must be between 0 and 1");
@@ -468,25 +540,25 @@ public class Heatlist {
         float va = value;
         float vb = 1f - value;
 
-        Heatlist result = new Heatlist(a.values.length);
+        HeatList result = new HeatList(a.size);
         result.samples = a.samples + b.samples;
-        for (int i = 0; i < a.values.length; i++) {
-            result.values[i] = a.values[i] * va + b.values[i] * vb;
+        for (int i = 0; i < a.size; i++) {
+            result.values[i] = (float) (a.values[i] * va) + (b.values[i] * vb);
         }
         result.normalized = a.normalized && b.normalized;
         return result;
     }
 
     /**
-     * Creates a cumulative-sum Heatlist from a source list.
+     * Creates a cumulative-sum HeatList from a source list.
      *
      * @param source the source list
-     * @return a new Heatlist
+     * @return a new HeatList
      */
-    public static Heatlist getCumulative(Heatlist source) {
-        Heatlist result = new Heatlist(source.values.length);
+    public static HeatList getCumulative(HeatList source) {
+        HeatList result = new HeatList(source.size);
         float sum = 0;
-        for (int i = 0; i < result.values.length; i++) {
+        for (int i = 0; i < result.size; i++) {
             sum += source.values[i];
             result.values[i] = sum;
         }
