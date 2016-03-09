@@ -34,23 +34,43 @@ public class Heatmap {
     protected int samples;
     protected final float[] values;
 
-    public Heatmap(int keycount) {
-        if (keycount <= 0) {
-            throw new IllegalArgumentException("Unable to make Heatmap of size " + keycount);
+    /**
+     * Constructor
+     *
+     * @param size the number of keys (indeces) in the Heatmap
+     */
+    public Heatmap(int size) {
+        if (size <= 0) {
+            throw new IllegalArgumentException("Unable to make Heatmap of size " + size);
         }
 
         this.samples = 0;
-        this.values = new float[keycount];
+        this.values = new float[size];
     }
 
+    /**
+     * Returns the number of samples taken
+     *
+     * @return the number of samples taken
+     */
     public int getSampleCount() {
         return samples;
     }
 
-    public int getKeyCount() {
+    /**
+     * Returns the map's size
+     *
+     * @return the size of the map
+     */
+    public int getSize() {
         return values.length;
     }
 
+    /**
+     * Returns an array of all values in the map
+     *
+     * @return an array of all values in the map
+     */
     public float[] getValues() {
         return values.clone();
     }
@@ -62,10 +82,23 @@ public class Heatmap {
         return values[index];
     }
 
+    /**
+     * Increments a given index by 1
+     *
+     * @param index the index to increment
+     * @return the new value at the given index
+     */
     public float inc(int index) {
         return inc(index, 1);
     }
 
+    /**
+     * Increments a given index by some amount of samples
+     *
+     * @param index the index to increment
+     * @param count the number of samples to increment
+     * @return the new value at the given index
+     */
     public float inc(int index, int count) {
         if (index < 0 || index >= values.length) {
             throw new ArrayIndexOutOfBoundsException();
@@ -82,7 +115,19 @@ public class Heatmap {
         return values[index] += (float) count / samples;// values[index] += count / samples;
     }
 
+    /**
+     * Resets all values in the map to zero
+     */
     public void reset() {
+        for (int i = 0; i < values.length; i++) {
+            values[i] = 0;
+        }
+    }
+
+    /**
+     * Clears all values and samples in the map
+     */
+    public void clear() {
         for (int i = 0; i < values.length; i++) {
             values[i] = 0;
         }
@@ -93,6 +138,13 @@ public class Heatmap {
         return getSum(0, values.length);
     }
 
+    /**
+     * Returns the sum of all the values in a given range
+     *
+     * @param startIndex the index to start searching from (inclusive)
+     * @param endIndex the index to search up to (non-inclusive)
+     * @return the sum all the of values in a given range
+     */
     public float getSum(int startIndex, int endIndex) {
         if (startIndex < 0 || startIndex > values.length || endIndex < 0 || endIndex > values.length) {
             throw new ArrayIndexOutOfBoundsException();
@@ -105,10 +157,22 @@ public class Heatmap {
         return sum;
     }
 
+    /**
+     * Returns the maximum value in the Heatmap
+     *
+     * @return the maximum value in the Heatmap
+     */
     public float getMax() {
         return getMax(0, values.length);
     }
 
+    /**
+     * Returns the maximum value in a range
+     *
+     * @param startIndex the index to start searching from (inclusive)
+     * @param endIndex the index to search up to (non-inclusive)
+     * @return the maximum value in a range
+     */
     public float getMax(int startIndex, int endIndex) {
         if (startIndex < 0 || startIndex >= values.length || endIndex < 0 || endIndex > values.length) {
             throw new ArrayIndexOutOfBoundsException();
@@ -123,10 +187,22 @@ public class Heatmap {
         return max;
     }
 
+    /**
+     * Returns the minimum value in the Heatmap
+     *
+     * @return the minimum value in the Heatmap
+     */
     public float getMin() {
         return getMin(0, values.length);
     }
 
+    /**
+     * Returns the minimum value in a range
+     *
+     * @param startIndex the index to start searching from (inclusive)
+     * @param endIndex the index to search up to (non-inclusive)
+     * @return the minimum value in a range
+     */
     public float getMin(int startIndex, int endIndex) {
         if (startIndex < 0 || startIndex >= values.length || endIndex < 0 || endIndex > values.length) {
             throw new ArrayIndexOutOfBoundsException();
@@ -141,10 +217,26 @@ public class Heatmap {
         return min;
     }
 
+    /**
+     * Returns the first index containing a value greater than the threshold
+     *
+     * @param threshold the threshold to check
+     * @return the first index containing a value greater than the threshold, or
+     * -1 if none
+     */
     public int indexOfGreater(int threshold) {
         return indexOfGreater(0, values.length, threshold);
     }
 
+    /**
+     * Returns the first index containing a value greater than the threshold
+     *
+     * @param startIndex the index to start searching from (inclusive)
+     * @param endIndex the index to search up to (non-inclusive)
+     * @param threshold the threshold to check
+     * @return the first index containing a value greater than the threshold, or
+     * -1 if none
+     */
     public int indexOfGreater(int startIndex, int endIndex, int threshold) {
         if (startIndex < 0 || startIndex > values.length || endIndex < 0 || endIndex > values.length) {
             throw new ArrayIndexOutOfBoundsException();
@@ -158,10 +250,26 @@ public class Heatmap {
         return -1;
     }
 
+    /**
+     * Returns the last index containing a value greater than the threshold
+     *
+     * @param threshold the threshold to check
+     * @return the first index containing a value greater than the threshold, or
+     * -1 if none
+     */
     public int lastIndexOfGreater(int threshold) {
         return lastIndexOfGreater(0, values.length, threshold);
     }
 
+    /**
+     * Returns the last index containing a value greater than the threshold
+     *
+     * @param startIndex the index to start searching from (inclusive)
+     * @param endIndex the index to search up to (non-inclusive)
+     * @param threshold the threshold to check
+     * @return the first index containing a value greater than the threshold, or
+     * -1 if none
+     */
     public int lastIndexOfGreater(int startIndex, int endIndex, int threshold) {
         if (startIndex < 0 || startIndex > values.length || endIndex < 0 || endIndex > values.length) {
             throw new ArrayIndexOutOfBoundsException();
@@ -175,20 +283,30 @@ public class Heatmap {
         return -1;
     }
 
+    /**
+     * Sets every value to an equal value with a total sum of 1.0
+     *
+     * @return the new value of all indeces
+     */
     public float equalize() {
         float value = 1 / values.length;
         for (int i = 0; i < values.length; i++) {
             values[i] = value;
         }
-        samples = values.length;
         return value;
     }
 
-    public Heatmap Copy() {
-        Heatmap copy = new Heatmap(this.values.length);
-        System.arraycopy(this.values, 0, copy.values, 0, this.values.length);
-        copy.samples = this.samples;
-        return copy;
+    /**
+     * Create a copy of the Heatmap instance with the same sample count and
+     * values
+     *
+     * @return a copy of the Heatmap instance
+     */
+    public Heatmap copy() {
+        Heatmap map = new Heatmap(this.values.length);
+        System.arraycopy(this.values, 0, map.values, 0, this.values.length);
+        map.samples = this.samples;
+        return map;
     }
 
     @Override
@@ -205,10 +323,26 @@ public class Heatmap {
         return s;
     }
 
+    /**
+     * Returns a Heatmap whose values are the average of two other's
+     *
+     * @param a
+     * @param b
+     * @return a Heatmap whose values are the average of two other's
+     */
     public static Heatmap average(Heatmap a, Heatmap b) {
         return interpolate(a, b, 0.5f);
     }
 
+    /**
+     * Returns a Heatmap whose values are interpolated between two other's
+     *
+     * @param a
+     * @param b
+     * @param value The interpolation value. A value of 0 returns Heatmap a and
+     * a value of 1 returns Heatmap b.
+     * @return a Heatmap whose values are the average of two other's
+     */
     public static Heatmap interpolate(Heatmap a, Heatmap b, float value) {
         if (a.values.length != b.values.length) {
             throw new IllegalArgumentException("Referenced heatmaps must be of same size");
@@ -231,15 +365,15 @@ public class Heatmap {
         Heatmap map = new Heatmap(16);
 
         java.util.Random r = new java.util.Random();
-        for (int i = 0; i < 1000; i++) {
+        for (int i = 0; i < 100000; i++) {
             float f = r.nextFloat();
-            map.inc((int) (f * f * 4));
+            map.inc((int) (f * f * 16));
         }
 
         System.out.println(map + " SUM " + map.getSum());
         System.out.println("MIN " + map.getMin());
         System.out.println("MAX " + map.getMax());
-        System.out.println("CUM " + UnboundHeatmap.getCummulative(map));
+        System.out.println("CUM " + UnboundHeatmap.getCumulative(map));
         System.out.println("CUM " + UnboundHeatmap.extract(map, 1, 5));
     }
 

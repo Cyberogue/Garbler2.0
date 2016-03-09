@@ -31,17 +31,43 @@ package me.aliceq.garbler;
  */
 public class UnboundHeatmap extends Heatmap {
 
-    public UnboundHeatmap(int keycount) {
-        super(keycount);
+    /**
+     * Constructor
+     *
+     * @param size the number of keys (indeces) in the Heatmap
+     */
+    public UnboundHeatmap(int size) {
+        super(size);
     }
 
-    public static UnboundHeatmap getCummulative(Heatmap source) {
-        return UnboundHeatmap.getCummulative(source, 0, source.values.length);
+    /**
+     * Obtains the cumulative Heatmap of a source Heatmap
+     *
+     * @param source the source Heatmap
+     * @return the cumulative Heatmap of a source Heatmap
+     */
+    public static UnboundHeatmap getCumulative(Heatmap source) {
+        return UnboundHeatmap.getCumulative(source, 0, source.values.length);
     }
 
-    public static UnboundHeatmap getCummulative(Heatmap source, int startIndex, int endIndex) {
-        UnboundHeatmap map = new UnboundHeatmap(endIndex - startIndex);
+    /**
+     * Obtains the cumulative Heatmap of a source Heatmap within a provided
+     * range
+     *
+     * @param source the source Heatmap
+     * @param startIndex the index to start summing from
+     * @param count the number of indeces to count
+     * @return the cumulative Heatmap of a source Heatmap within a provided
+     * range
+     */
+    public static UnboundHeatmap getCumulative(Heatmap source, int startIndex, int count) {
+        if (startIndex < 0 || startIndex >= source.values.length || count < 0 || startIndex + count > source.values.length) {
+            throw new ArrayIndexOutOfBoundsException();
+        }
+
+        UnboundHeatmap map = new UnboundHeatmap(count);
         float sum = 0;
+        int endIndex = startIndex + count;
         for (int i = startIndex; i < endIndex; i++) {
             sum += source.values[i];
             map.values[i - startIndex] = sum;
@@ -49,40 +75,52 @@ public class UnboundHeatmap extends Heatmap {
         return map;
     }
 
-    public static UnboundHeatmap extract(Heatmap source, int startIndex, int length) {
-        if (startIndex < 0 || startIndex >= source.values.length || length < 0 || startIndex + length > source.values.length) {
+    /**
+     * Returns a sub-Heatmap of another
+     *
+     * @param source the source Heatmap
+     * @param startIndex the index to start summing from
+     * @param count the number of indeces to count
+     * @return a sub-Heatmap of another
+     */
+    public static UnboundHeatmap extract(Heatmap source, int startIndex, int count) {
+        if (startIndex < 0 || startIndex >= source.values.length || count < 0 || startIndex + count > source.values.length) {
             throw new ArrayIndexOutOfBoundsException();
         }
 
-        UnboundHeatmap map = new UnboundHeatmap(length);
-        System.arraycopy(source.values, startIndex, map.values, 0, length);
+        UnboundHeatmap map = new UnboundHeatmap(count);
+        System.arraycopy(source.values, startIndex, map.values, 0, count);
         return map;
     }
 
-    public static UnboundHeatmap getValueSum(Heatmap a, Heatmap b) {
+    /**
+     * Adds the values and sample count of two Heatmaps together
+     *
+     * @param a
+     * @param b
+     * @return a new Heatmap instance
+     */
+    public static UnboundHeatmap getSum(Heatmap a, Heatmap b) {
         UnboundHeatmap result = new UnboundHeatmap(a.values.length);
         for (int i = 0; i < a.values.length; i++) {
             result.values[i] = a.values[i] + b.values[i];
         }
-        return result;
-    }
-
-    public static UnboundHeatmap getValueProduct(Heatmap a, float b) {
-        UnboundHeatmap result = new UnboundHeatmap(a.values.length);
-        for (int i = 0; i < a.values.length; i++) {
-            result.values[i] = a.values[i] * b;
-        }
-        return result;
-    }
-
-    public static UnboundHeatmap getSum(Heatmap a, Heatmap b) {
-        UnboundHeatmap result = getValueSum(a, b);
         result.samples = a.samples + b.samples;
         return result;
     }
 
+    /**
+     * Scales a Heatmap's values and sample count by a float (rounded down)
+     *
+     * @param a
+     * @param b
+     * @return a new Heatmap instance
+     */
     public static UnboundHeatmap getProduct(Heatmap a, float b) {
-        UnboundHeatmap result = getValueProduct(a, b);
+        UnboundHeatmap result = new UnboundHeatmap(a.values.length);
+        for (int i = 0; i < a.values.length; i++) {
+            result.values[i] = a.values[i] * b;
+        }
         result.samples = (int) (a.samples * b);
         return result;
     }
