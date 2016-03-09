@@ -21,51 +21,51 @@
  * OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN
  * THE SOFTWARE.
  */
-package me.aliceq.garbler;
+package me.aliceq.heatmap;
 
 /**
- * An extension of a Heatmap which does not guarantee a cumulative sum of
+ * An extension of a Heatlist which does not guarantee a cumulative sum of
  * approximately 1.0f
  *
  * @author Alice Quiros <email@aliceq.me>
  */
-public class UnboundHeatmap extends Heatmap {
+public class UnboundHeatlist extends BoundedHeatlist {
 
     /**
      * Constructor
      *
-     * @param size the number of keys (indeces) in the Heatmap
+     * @param size the number of keys (indeces) in the Heatlist
      */
-    public UnboundHeatmap(int size) {
+    public UnboundHeatlist(int size) {
         super(size);
     }
 
     /**
-     * Obtains the cumulative Heatmap of a source Heatmap
+     * Obtains the cumulative Heatlist of a source Heatlist
      *
-     * @param source the source Heatmap
-     * @return the cumulative Heatmap of a source Heatmap
+     * @param source the source Heatlist
+     * @return the cumulative Heatlist of a source Heatlist
      */
-    public static UnboundHeatmap getCumulative(Heatmap source) {
-        return UnboundHeatmap.getCumulative(source, 0, source.values.length);
+    public static UnboundHeatlist getCumulative(BoundedHeatlist source) {
+        return UnboundHeatlist.getCumulative(source, 0, source.values.length);
     }
 
     /**
-     * Obtains the cumulative Heatmap of a source Heatmap within a provided
+     * Obtains the cumulative Heatlist of a source Heatlist within a provided
      * range
      *
-     * @param source the source Heatmap
+     * @param source the source Heatlist
      * @param startIndex the index to start summing from
      * @param count the number of indeces to count
-     * @return the cumulative Heatmap of a source Heatmap within a provided
+     * @return the cumulative Heatlist of a source Heatlist within a provided
      * range
      */
-    public static UnboundHeatmap getCumulative(Heatmap source, int startIndex, int count) {
+    public static UnboundHeatlist getCumulative(BoundedHeatlist source, int startIndex, int count) {
         if (startIndex < 0 || startIndex >= source.values.length || count < 0 || startIndex + count > source.values.length) {
             throw new ArrayIndexOutOfBoundsException();
         }
 
-        UnboundHeatmap map = new UnboundHeatmap(count);
+        UnboundHeatlist map = new UnboundHeatlist(count);
         float sum = 0;
         int endIndex = startIndex + count;
         for (int i = startIndex; i < endIndex; i++) {
@@ -76,32 +76,32 @@ public class UnboundHeatmap extends Heatmap {
     }
 
     /**
-     * Returns a sub-Heatmap of another
+     * Returns a sub-Heatlist of another
      *
-     * @param source the source Heatmap
+     * @param source the source Heatlist
      * @param startIndex the index to start summing from
      * @param count the number of indeces to count
-     * @return a sub-Heatmap of another
+     * @return a sub-Heatlist of another
      */
-    public static UnboundHeatmap extract(Heatmap source, int startIndex, int count) {
+    public static UnboundHeatlist extract(BoundedHeatlist source, int startIndex, int count) {
         if (startIndex < 0 || startIndex >= source.values.length || count < 0 || startIndex + count > source.values.length) {
             throw new ArrayIndexOutOfBoundsException();
         }
 
-        UnboundHeatmap map = new UnboundHeatmap(count);
+        UnboundHeatlist map = new UnboundHeatlist(count);
         System.arraycopy(source.values, startIndex, map.values, 0, count);
         return map;
     }
 
     /**
-     * Adds the values and sample count of two Heatmaps together
+     * Adds the values and sample count of two Heatlists together
      *
      * @param a
      * @param b
-     * @return a new Heatmap instance
+     * @return a new Heatlist instance
      */
-    public static UnboundHeatmap getSum(Heatmap a, Heatmap b) {
-        UnboundHeatmap result = new UnboundHeatmap(a.values.length);
+    public static UnboundHeatlist getSum(BoundedHeatlist a, BoundedHeatlist b) {
+        UnboundHeatlist result = new UnboundHeatlist(a.values.length);
         for (int i = 0; i < a.values.length; i++) {
             result.values[i] = a.values[i] + b.values[i];
         }
@@ -110,14 +110,14 @@ public class UnboundHeatmap extends Heatmap {
     }
 
     /**
-     * Scales a Heatmap's values and sample count by a float (rounded down)
+     * Scales a Heatlist's values and sample count by a float (rounded down)
      *
      * @param a
      * @param b
-     * @return a new Heatmap instance
+     * @return a new Heatlist instance
      */
-    public static UnboundHeatmap getProduct(Heatmap a, float b) {
-        UnboundHeatmap result = new UnboundHeatmap(a.values.length);
+    public static UnboundHeatlist getProduct(BoundedHeatlist a, float b) {
+        UnboundHeatlist result = new UnboundHeatlist(a.values.length);
         for (int i = 0; i < a.values.length; i++) {
             result.values[i] = a.values[i] * b;
         }

@@ -21,7 +21,7 @@
  * OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN
  * THE SOFTWARE.
  */
-package me.aliceq.garbler;
+package me.aliceq.heatmap;
 
 /**
  * Class which maintains a normalized heat map of float values. At any time the
@@ -29,7 +29,7 @@ package me.aliceq.garbler;
  *
  * @author Alice Quiros <email@aliceq.me>
  */
-public class Heatmap {
+public class BoundedHeatlist implements Heatlist {
 
     protected int samples;
     protected final float[] values;
@@ -37,11 +37,11 @@ public class Heatmap {
     /**
      * Constructor
      *
-     * @param size the number of keys (indeces) in the Heatmap
+     * @param size the number of keys (indeces) in the Heatlist
      */
-    public Heatmap(int size) {
+    public BoundedHeatlist(int size) {
         if (size <= 0) {
-            throw new IllegalArgumentException("Unable to make Heatmap of size " + size);
+            throw new IllegalArgumentException("Unable to make Heatlist of size " + size);
         }
 
         this.samples = 0;
@@ -62,6 +62,7 @@ public class Heatmap {
      *
      * @return the size of the map
      */
+    @Override
     public int getSize() {
         return values.length;
     }
@@ -71,10 +72,18 @@ public class Heatmap {
      *
      * @return an array of all values in the map
      */
+    
+    @Override
     public float[] getValues() {
         return values.clone();
     }
 
+    /**
+     * Gets a single value at a specified index
+     * @param index the index to retrieve
+     * @return a floating point value
+     */
+    @Override
     public float getValue(int index) {
         if (index < 0 || index >= values.length) {
             throw new ArrayIndexOutOfBoundsException();
@@ -88,36 +97,39 @@ public class Heatmap {
      * @param index the index to increment
      * @return the new value at the given index
      */
-    public float inc(int index) {
-        return inc(index, 1);
+    @Override
+    public float increment(int index) {
+        return increment(index, 1);
     }
 
     /**
      * Increments a given index by some amount of samples
      *
      * @param index the index to increment
-     * @param count the number of samples to increment
+     * @param amount the number of samples to increment
      * @return the new value at the given index
      */
-    public float inc(int index, int count) {
+    @Override
+    public float increment(int index, int amount) {
         if (index < 0 || index >= values.length) {
             throw new ArrayIndexOutOfBoundsException();
-        } else if (count <= 0) {
+        } else if (amount <= 0) {
             throw new IllegalArgumentException("Count has to be greater than zero");
         }
 
-        samples += count;
-        float invweight = 1 - (float) count / samples;
+        samples += amount;
+        float invweight = 1 - (float) amount / samples;
 
         for (int i = 0; i < values.length; i++) {
             values[i] *= invweight;
         }
-        return values[index] += (float) count / samples;// values[index] += count / samples;
+        return values[index] += (float) amount / samples;// values[index] += count / samples;
     }
 
     /**
      * Resets all values in the map to zero
      */
+    @Override
     public void reset() {
         for (int i = 0; i < values.length; i++) {
             values[i] = 0;
@@ -127,6 +139,7 @@ public class Heatmap {
     /**
      * Clears all values and samples in the map
      */
+    @Override
     public void clear() {
         for (int i = 0; i < values.length; i++) {
             values[i] = 0;
@@ -134,6 +147,11 @@ public class Heatmap {
         samples = 0;
     }
 
+    /**
+     * Returns the sum of all values
+     * @return the sum of all values
+     */
+    @Override
     public float getSum() {
         return getSum(0, values.length);
     }
@@ -145,6 +163,7 @@ public class Heatmap {
      * @param endIndex the index to search up to (non-inclusive)
      * @return the sum all the of values in a given range
      */
+    @Override
     public float getSum(int startIndex, int endIndex) {
         if (startIndex < 0 || startIndex > values.length || endIndex < 0 || endIndex > values.length) {
             throw new ArrayIndexOutOfBoundsException();
@@ -158,10 +177,11 @@ public class Heatmap {
     }
 
     /**
-     * Returns the maximum value in the Heatmap
+     * Returns the maximum value in the Heatlist
      *
-     * @return the maximum value in the Heatmap
+     * @return the maximum value in the Heatlist
      */
+    @Override
     public float getMax() {
         return getMax(0, values.length);
     }
@@ -173,6 +193,7 @@ public class Heatmap {
      * @param endIndex the index to search up to (non-inclusive)
      * @return the maximum value in a range
      */
+    @Override
     public float getMax(int startIndex, int endIndex) {
         if (startIndex < 0 || startIndex >= values.length || endIndex < 0 || endIndex > values.length) {
             throw new ArrayIndexOutOfBoundsException();
@@ -188,10 +209,11 @@ public class Heatmap {
     }
 
     /**
-     * Returns the minimum value in the Heatmap
+     * Returns the minimum value in the Heatlist
      *
-     * @return the minimum value in the Heatmap
+     * @return the minimum value in the Heatlist
      */
+    @Override
     public float getMin() {
         return getMin(0, values.length);
     }
@@ -203,6 +225,7 @@ public class Heatmap {
      * @param endIndex the index to search up to (non-inclusive)
      * @return the minimum value in a range
      */
+    @Override
     public float getMin(int startIndex, int endIndex) {
         if (startIndex < 0 || startIndex >= values.length || endIndex < 0 || endIndex > values.length) {
             throw new ArrayIndexOutOfBoundsException();
@@ -288,6 +311,7 @@ public class Heatmap {
      *
      * @return the new value of all indeces
      */
+    @Override
     public float equalize() {
         float value = 1 / values.length;
         for (int i = 0; i < values.length; i++) {
@@ -297,13 +321,14 @@ public class Heatmap {
     }
 
     /**
-     * Create a copy of the Heatmap instance with the same sample count and
+     * Create a copy of the Heatlist instance with the same sample count and
      * values
      *
-     * @return a copy of the Heatmap instance
+     * @return a copy of the Heatlist instance
      */
-    public Heatmap copy() {
-        Heatmap map = new Heatmap(this.values.length);
+    @Override
+    public BoundedHeatlist copy() {
+        BoundedHeatlist map = new BoundedHeatlist(this.values.length);
         System.arraycopy(this.values, 0, map.values, 0, this.values.length);
         map.samples = this.samples;
         return map;
@@ -324,26 +349,26 @@ public class Heatmap {
     }
 
     /**
-     * Returns a Heatmap whose values are the average of two other's
+     * Returns a Heatlist whose values are the average of two other's
      *
      * @param a
      * @param b
-     * @return a Heatmap whose values are the average of two other's
+     * @return a Heatlist whose values are the average of two other's
      */
-    public static Heatmap average(Heatmap a, Heatmap b) {
+    public static BoundedHeatlist average(BoundedHeatlist a, BoundedHeatlist b) {
         return interpolate(a, b, 0.5f);
     }
 
     /**
-     * Returns a Heatmap whose values are interpolated between two other's
+     * Returns a Heatlist whose values are interpolated between two other's
      *
      * @param a
      * @param b
-     * @param value The interpolation value. A value of 0 returns Heatmap a and
-     * a value of 1 returns Heatmap b.
-     * @return a Heatmap whose values are the average of two other's
+     * @param value The interpolation value. A value of 0 returns Heatlist a and
+     * a value of 1 returns Heatlist b.
+     * @return a Heatlist whose values are the average of two other's
      */
-    public static Heatmap interpolate(Heatmap a, Heatmap b, float value) {
+    public static BoundedHeatlist interpolate(BoundedHeatlist a, BoundedHeatlist b, float value) {
         if (a.values.length != b.values.length) {
             throw new IllegalArgumentException("Referenced heatmaps must be of same size");
         } else if (value < 0 || value > 1) {
@@ -353,28 +378,11 @@ public class Heatmap {
         float va = value;
         float vb = 1f - value;
 
-        Heatmap result = new Heatmap(a.values.length);
+        BoundedHeatlist result = new BoundedHeatlist(a.values.length);
         result.samples = a.samples + b.samples;
         for (int i = 0; i < a.values.length; i++) {
             result.values[i] = a.values[i] * va + b.values[i] * vb;
         }
         return result;
     }
-
-    public static void main(String[] args) {
-        Heatmap map = new Heatmap(16);
-
-        java.util.Random r = new java.util.Random();
-        for (int i = 0; i < 100000; i++) {
-            float f = r.nextFloat();
-            map.inc((int) (f * f * 16));
-        }
-
-        System.out.println(map + " SUM " + map.getSum());
-        System.out.println("MIN " + map.getMin());
-        System.out.println("MAX " + map.getMax());
-        System.out.println("CUM " + UnboundHeatmap.getCumulative(map));
-        System.out.println("CUM " + UnboundHeatmap.extract(map, 1, 5));
-    }
-
 }
