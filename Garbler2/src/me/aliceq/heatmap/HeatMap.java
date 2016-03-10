@@ -23,10 +23,13 @@
  */
 package me.aliceq.heatmap;
 
+import java.text.DecimalFormat;
 import java.util.AbstractMap;
 import java.util.ArrayList;
 import java.util.Collection;
+import java.util.Collections;
 import java.util.HashMap;
+import java.util.List;
 import java.util.Map;
 
 /**
@@ -34,12 +37,29 @@ import java.util.Map;
  * list. Accesses are performed in O(logn);
  *
  * @author Alice Quiros <email@aliceq.me>
- * @param <K> the type of object used as a key
+ * @param <K> Comparable key type
  */
 public class HeatMap<K extends Comparable> {
 
-    final protected HeatList values = new HeatList();
-    final protected ArrayList<K> keys = new ArrayList();
+    private HeatList values;
+    private List<K> keys;
+
+    /**
+     * Constructs an empty HeatMap
+     */
+    public HeatMap() {
+        this(1);
+    }
+
+    /**
+     * Constructs an empty HeatMap with specified initial capacity
+     *
+     * @param initialCapacity the initial capacity of the map
+     */
+    public HeatMap(int initialCapacity) {
+        values = new HeatList(initialCapacity);
+        keys = new ArrayList(initialCapacity);
+    }
 
     /**
      * Returns the number of elements in the HeatMap
@@ -65,24 +85,17 @@ public class HeatMap<K extends Comparable> {
      * @return the total sum of all values in the HeatMap
      */
     public float getTotal() {
-        return values.size();
+        return values.getTotal();
     }
 
     /**
-     * Adds a key to the list with initial value 0
+     * Verifies that a key exists and if not, it creates it
      *
      * @param key the key to add
-     * @return true if successful or false if the key already exists
+     * @return true if a new key was made or false if the key already exists
      */
-    public boolean addKey(K key) {
-        int index = keyToIndex(key);
-
-        if (keys.size() == index || keys.get(index) != key) {
-            values.addNewIndex(index);
-            keys.add(index, key);
-            return true;
-        }
-        return false;
+    public boolean touch(K key) {
+        return touch(key, keyToIndex(key));
     }
 
     /**
@@ -156,20 +169,89 @@ public class HeatMap<K extends Comparable> {
     }
 
     /**
-     * Returns a Collection of all the entries in the HeatMap as key-value pairs
+     * Retrieves a key at a specified index
      *
-     * @return a Collection of key-value pairs
+     * @param index the index
+     * @return the key at the specified index
      */
-    public Map.Entry<K, Float>[] entries() {
-        Map.Entry<K, Float>[] set = new Map.Entry[keys.size()];
-        for (int i = 0; i < keys.size(); i++) {
-            set[i] = new AbstractMap.SimpleImmutableEntry(keys.get(i), values.getValue(i));
-        }
-        return set;
+    protected K getKey(int index) {
+        return keys.get(index);
     }
 
     /**
-     * Returns a map of all the key-value pairs in the HeatMap
+     * Increments the value of a key by a sample. If the key doesn't exist, a
+     * new key is made.
+     *
+     * @param key the key to increment
+     * @return the new value at the given key
+     */
+    public float increment(K key) {
+        return increment(key, 1);
+    }
+
+    /**
+     * Increments the value of a key by an amount of samples. If the key doesn't
+     * exist, a new key is made.
+     *
+     * @param key the key to increment
+     * @param amount the number of samples to increase
+     * @return the new value at the given key
+     */
+    public float increment(K key, int amount) {
+        int index = keyToIndex(key);
+        if (index < keys.size() && keys.get(index) == key) {
+            return values.increment(index, amount);
+        } else {
+            // Add a new key and increment it
+            keys.add(index, key);
+            values.addNewIndex(index);
+            return values.increment(index, amount);
+        }
+    }
+
+    /**
+     * Increments the value of a key by an amount of samples. If the key doesn't
+     * exist this method returns 0.
+     *
+     * @param key the key to increment
+     * @return the new value at the given key or 0
+     */
+    public float incrementIfExists(K key) {
+        return HeatMap.this.incrementIfExists(key, 0);
+    }
+
+    /**
+     * Increments the value of a key by an amount of samples. If the key doesn't
+     * exist this method returns 0.
+     *
+     * @param key the key to increment
+     * @param amount the number of samples to increase
+     * @return the new value at the given key or 0
+     */
+    public float incrementIfExists(K key, int amount) {
+        int index = keyToIndex(key);
+        if (index < keys.size() && keys.get(index) == key) {
+            return values.increment(index, amount);
+        }
+        return 0f;
+    }
+
+    /**
+     * Returns a read-only Collection of all the entries in the HeatMap as
+     * key-value pairs
+     *
+     * @return a Collection of key-value pairs
+     */
+    public Collection<Map.Entry<K, Float>> entries() {
+        ArrayList< Map.Entry<K, Float>> set = new ArrayList(keys.size());
+        for (int i = 0; i < keys.size(); i++) {
+            set.add(new AbstractMap.SimpleImmutableEntry(keys.get(i), values.getValue(i)));
+        }
+        return Collections.unmodifiableList(set);
+    }
+
+    /**
+     * Returns a read-only map of all the key-value pairs in the HeatMap
      *
      * @return a new Map instance
      */
@@ -178,7 +260,55 @@ public class HeatMap<K extends Comparable> {
         for (int i = 0; i < keys.size(); i++) {
             map.put(keys.get(i), values.getValue(i));
         }
+        return Collections.unmodifiableMap(map);
+    }
+
+    /**
+     * Creates an ordered list of keys and cumulative-sum values
+     *
+     * @return a read-only ordered list of key-value pairs
+     */
+    public Collection<Map.Entry<K, Float>> getCumulative() {
+        ArrayList< Map.Entry<K, Float>> set = new ArrayList(keys.size());
+        float sum = 0;
+        for (int i = 0; i < keys.size(); i++) {
+            sum += values.getValue(i);
+            set.add(new AbstractMap.SimpleImmutableEntry(keys.get(i), sum));
+        }
+        return Collections.unmodifiableList(set);
+    }
+
+    /**
+     * Creates a read-only copy of the HeatList instance with the same
+     * parameters
+     *
+     * @return a read-only copy of the HeatList instance
+     */
+    public HeatMap<K> asReadonly() {
+        HeatMap<K> map = new ReadOnlyHeatMap();
+        map.keys = Collections.unmodifiableList(keys);
+        map.values = values;
         return map;
+    }
+
+    /**
+     * Verifies that a key exists and if not, it creates it. This method should
+     * only be used with an external call to keyToIndex in order to minimize
+     * keyToIndex calls. Using any other index may cause errors or put the map
+     * in an illegal state.
+     *
+     * @param key the key to add
+     * @param index the index to touch. This should be obtained using
+     * KeyToIndex(key).
+     * @return true if a new key was made or false if the key already exists
+     */
+    public boolean touch(K key, int index) {
+        if (checkValidity(index, key)) {
+            values.addNewIndex(index);
+            keys.add(index, key);
+            return true;
+        }
+        return false;
     }
 
     /**
@@ -205,6 +335,64 @@ public class HeatMap<K extends Comparable> {
         return low;
     }
 
+    /**
+     * Verifies that a key exists at the given index
+     *
+     * @param index the index to check
+     * @param key the key to check
+     * @return true if the key exists at the given index
+     */
+    protected boolean verifyKey(int index, K key) {
+        if (index < 0 || index >= keys.size()) {
+            throw new IndexOutOfBoundsException();
+        }
+
+        return keys.get(index) == key;
+    }
+
+    /**
+     * Pushes a key into the given index. Note that this does not check if the
+     * key exists so use checkValidity before calling this method.
+     *
+     * @param key the key to add
+     * @param index the index to push the key into
+     */
+    protected void pushKey(K key, int index) {
+        values.addNewIndex(index);
+        keys.add(index, key);
+    }
+
+    /**
+     * Verifies that the given key can go into the provided index. That is, it
+     * is either being added to the end or the key at the given location is
+     * different. Note that this method does not check if the key already exists
+     * in another index.
+     *
+     * @param index the index to touch
+     * @param key the key to verify
+     * @return true if the key is valid at the given index
+     */
+    protected boolean checkValidity(int index, K key) {
+        if (index < 0 || index > keys.size()) {
+            throw new IndexOutOfBoundsException();
+        }
+
+        return (keys.size() == index || keys.get(index) != key);
+    }
+
+    public String toString(DecimalFormat format) {
+        if (keys.size() <= 0) {
+            return values.normalized() ? "{}" : "<>";
+        }
+
+        String s = (values.normalized() ? "{" : "<") + keys.get(0) + "=" + values.getValue(0);
+        for (int i = 1; i < keys.size(); i++) {
+            s += ", " + format.format(keys.get(i)) + "=" + format.format(values.getValue(i));
+        }
+        s += (values.normalized() ? "}" : ">");
+        return s;
+    }
+
     @Override
     public String toString() {
         if (keys.size() <= 0) {
@@ -213,33 +401,234 @@ public class HeatMap<K extends Comparable> {
 
         String s = (values.normalized() ? "{" : "<") + keys.get(0) + "=" + values.getValue(0);
         for (int i = 1; i < keys.size(); i++) {
-            s += ", " + keys.get(i) + "=" + values.getValue(0);
+            s += ", " + keys.get(i) + "=" + values.getValue(i);
         }
         s += (values.normalized() ? "}" : ">");
         return s;
     }
 
+    /**
+     * Successively applies a filter to a source
+     *
+     * @param source
+     * @param filter
+     * @return a new HeatMap with the result
+     */
+    public static final HeatMap applyFilter(HeatMap source, HeatMapFilter filter) {
+        return filter.applyFilter(new HeatMap(), source);
+    }
+
+    /**
+     * Successively applies a filter to two sources
+     *
+     * @param source1
+     * @param source2
+     * @param filter
+     * @return a new HeatMap with the result
+     */
+    public static final HeatMap applyFilter(HeatMap source1, HeatMap source2, HeatMapFilter filter) {
+        return filter.applyFilter(new HeatMap(), source1, source2);
+    }
+
+    /**
+     * Successively applies a filter to three sources
+     *
+     * @param source1
+     * @param source2
+     * @param source3
+     * @param filter
+     * @return a new HeatMap with the result
+     */
+    public static final HeatMap applyFilter(HeatMap source1, HeatMap source2, HeatMap source3, HeatMapFilter filter) {
+        return filter.applyFilter(new HeatMap(), source1, source2, source3);
+    }
+
+    /**
+     * Successively applies a filter to multiple sources
+     *
+     * @param sources
+     * @param filter
+     * @return a new HeatMap with the result
+     */
+    public static final HeatMap applyFilter(HeatMap[] sources, HeatMapFilter filter) {
+        return filter.applyFilter(new HeatMap(), sources);
+    }
+
+    /**
+     * Successively applies a filter to multiple sources
+     *
+     * @param sources
+     * @param filter
+     * @return a new HeatMap with the result
+     */
+    public static final HeatMap applyFilter(Collection<HeatMap> sources, HeatMapFilter filter) {
+        return filter.applyFilter(new HeatMap(), sources);
+    }
+
     public static void main(String[] args) {
+        // This is just a sample for testing. Please ignore
         java.util.Random r = new java.util.Random();
 
-        HeatMap<Character> map = new HeatMap();
-        System.out.println(map);
+        HeatMap<Integer> map1 = new HeatMap();
+        HeatMap<Integer> map2 = new HeatMap();
 
-        map.addKey('c');
-        map.addKey('a');
-        map.addKey('t');
-        map.addKey('f');
-        map.addKey('h');
-        map.addKey('j');
-        map.addKey('w');
+        for (int i = 0; i < 100; i++) {
+            map1.increment(r.nextInt(5));
+            map2.increment(r.nextInt(5));
+        }
 
-        map.addKey('a');
-        map.addKey('p');
+        System.out.println(map1 + " SUM " + map1.getTotal());
+        System.out.println(map2 + " SUM " + map2.getTotal());
+        System.out.println(HeatMap.applyFilter(map1, map2, HeatMapFilter.Average));
 
-        System.out.println(map.toMap());
-        System.out.println(map);
-
-        map.removeKey('h');
-        System.out.println(map);
     }
+
+    /**
+     * Class used for merging two or more HeatMaps. The process method must be
+     * overwritten with the core functionality. For additional functionality,
+     * you may override the preprocess and postprocess methods.
+     *
+     * @author Alice Quiros <email@aliceq.me>
+     * @param <K> Comparable key type
+     */
+    public static abstract class HeatMapFilter<K extends Comparable> {
+
+        /**
+         * Applies the filter to a single destination from three sources
+         *
+         * @param destination
+         * @param source
+         * @return the destination HeatMap
+         */
+        public final HeatMap applyFilter(HeatMap<K> destination, HeatMap<K> source) {
+            preprocess(destination, 1);
+            process(source, destination, 1);
+            postprocess(destination, 1);
+            return destination;
+        }
+
+        /**
+         * Applies the filter to a single destination from a single source
+         *
+         * @param destination
+         * @param source1
+         * @param source2
+         * @return the destination HeatMap
+         */
+        public final HeatMap applyFilter(HeatMap<K> destination, HeatMap<K> source1, HeatMap<K> source2) {
+            preprocess(destination, 2);
+            process(source1, destination, 2);
+            process(source2, destination, 2);
+            postprocess(destination, 2);
+            return destination;
+        }
+
+        /**
+         * Applies the filter to a single destination from two sources
+         *
+         * @param destination
+         * @param source1
+         * @param source2
+         * @param source3
+         * @return the destination HeatMap
+         */
+        public final HeatMap applyFilter(HeatMap<K> destination, HeatMap<K> source1, HeatMap<K> source2, HeatMap<K> source3) {
+            preprocess(destination, 3);
+            process(source1, destination, 3);
+            process(source2, destination, 3);
+            process(source3, destination, 3);
+            postprocess(destination, 3);
+            return destination;
+        }
+
+        /**
+         * Applies the filter to a single destination from multiple sources
+         *
+         * @param destination
+         * @param sources
+         * @return the destination HeatMap
+         */
+        public final HeatMap applyFilter(HeatMap<K> destination, HeatMap<K>[] sources) {
+            preprocess(destination, sources.length);
+            for (HeatMap<K> source : sources) {
+                process(source, destination, sources.length);
+            }
+            postprocess(destination, sources.length);
+            return destination;
+        }
+
+        /**
+         * Applies the filter to a single destination from multiple sources
+         *
+         * @param destination
+         * @param sources
+         * @return the destination HeatMap
+         */
+        public final HeatMap applyFilter(HeatMap<K> destination, Collection<HeatMap<K>> sources) {
+            preprocess(destination, sources.size());
+            for (HeatMap<K> source : sources) {
+                process(source, destination, sources.size());
+            }
+            postprocess(destination, sources.size());
+            return destination;
+        }
+
+        /**
+         * Hook method called before any processing is done
+         *
+         * @param destination the destination HeatMap
+         * @param count the number of sources
+         */
+        public void preprocess(HeatMap<K> destination, float count) {
+
+        }
+
+        /**
+         * Hook method called after all processing is done
+         *
+         * @param destination the destination HeatMap
+         * @param count the number of sources
+         */
+        public void postprocess(HeatMap<K> destination, float count) {
+
+        }
+
+        /**
+         * Override this method to provide custom filter functionality. This
+         * method will be called for every source when merged or applied.
+         *
+         * HeatMap includes protected methods for data verification. Study the
+         * JavaDoc for any Protected methods inside HeatMap.
+         *
+         * @param source the current source to get data from
+         * @param destination the destination to write data into
+         * @param count the number of sources
+         */
+        public abstract void process(HeatMap<K> source, HeatMap<K> destination, float count);
+
+        /* DEFAULT FILTERS */
+        /**
+         * Basic filter which finds the average of a set of maps.
+         */
+        public static final HeatMapFilter Average = new HeatMapFilter() {
+
+            @Override
+            public void process(HeatMap source, HeatMap destination, float count) {
+                // Calculate the influence of each
+                float m = 1 / count;
+
+                // Apply to all the values
+                for (int i = 0; i < source.keys.size(); i++) {
+                    Comparable key = (Comparable) source.keys.get(i);
+
+                    int index = destination.keyToIndex(key);
+
+                    destination.touch(key, index);
+                    destination.values.overwriteValue(index, destination.values.getValue(i) + source.values.getValue(i) * m);
+                }
+            }
+        };
+
+    }
+
 }

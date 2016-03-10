@@ -23,6 +23,8 @@
  */
 package me.aliceq.heatmap;
 
+import java.text.DecimalFormat;
+
 /**
  * A class containing a list of floating point values with normalized and
  * unnormalized methods.
@@ -449,6 +451,19 @@ public class HeatList {
         return oldValue;
     }
 
+    public String toString(DecimalFormat format) {
+        if (size <= 0) {
+            return normalized ? "{}" : "<>";
+        }
+
+        String s = (normalized ? "{" : "<") + values[0];
+        for (int i = 1; i < size; i++) {
+            s += "," + format.format(values[i]);
+        }
+        s += (normalized ? "}" : ">");
+        return s;
+    }
+
     @Override
     public String toString() {
         if (size <= 0) {
@@ -464,8 +479,7 @@ public class HeatList {
     }
 
     /**
-     * Create a copy of the HeatList instance with the same sample count and
-     * values
+     * Creates a copy of the HeatList instance with the same parameters
      *
      * @return a copy of the HeatList instance
      */
@@ -473,7 +487,40 @@ public class HeatList {
         HeatList map = new HeatList(size);
         System.arraycopy(values, 0, map.values, 0, size);
         map.samples = samples;
+        map.normalized = normalized;
         return map;
+    }
+
+    /**
+     * Creates a read-only copy of the HeatList instance with the same
+     * parameters
+     *
+     * @return a read-only copy of the HeatList instance
+     */
+    public HeatList asReadonly() {
+        HeatList map = new ReadOnlyHeatList(size);
+        System.arraycopy(values, 0, map.values, 0, size);
+        map.samples = samples;
+        map.normalized = normalized;
+        return map;
+    }
+
+    /**
+     * Overwrites a value in the list. Note that this may denormalize the map,
+     * so it is recommended to re-normalize after overwrites are done.
+     *
+     * @param index the index to modify
+     * @param value the new value
+     * @return the old value at the index
+     */
+    protected float overwriteValue(int index, float value) {
+        if (index < 0 || index >= values.length) {
+            throw new IndexOutOfBoundsException();
+        }
+        float old = values[index];
+        values[index] = value;
+        normalized = false;
+        return old;
     }
 
     /**
@@ -565,4 +612,5 @@ public class HeatList {
         result.normalized = false;
         return result;
     }
+
 }
