@@ -305,6 +305,17 @@ public class HeatList {
     }
 
     /**
+     * Flags the HeatList as normalized if the sum of its values equals 1.0f or
+     * 0f (+/-.00001f)
+     *
+     * @return true if the List is normalized, false otherwise
+     */
+    public boolean verifyNormalization() {
+        float sum = getTotal();
+        return (normalized = sum <= 0.00001f || (sum >= 0.99999f && sum <= 1.00001f));
+    }
+
+    /**
      * Equalizes and normalizes all values in the HeatList
      *
      * @return the equalized value

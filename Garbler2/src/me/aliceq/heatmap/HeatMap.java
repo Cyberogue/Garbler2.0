@@ -477,9 +477,20 @@ public class HeatMap<K extends Comparable> {
             map2.increment(r.nextInt(5));
         }
 
-        System.out.println(map1 + " SUM " + map1.getTotal());
-        System.out.println(map2 + " SUM " + map2.getTotal());
-        System.out.println(HeatMap.applyFilter(map1, map2, HeatMapFilter.Average));
+        System.out.println("MAP 1: " + map1 + " SUM " + map1.getTotal());
+        System.out.println("MAP 2: " + map2 + " SUM " + map2.getTotal());
+
+        HeatMap average = HeatMap.applyFilter(map1, map2, HeatMapFilter.getDefaultAveragingFilter());
+        HeatMap sum = HeatMap.applyFilter(map1, map2, HeatMapFilter.getDefaultSummingFilter());
+        HeatMap cascade1 = HeatMap.applyFilter(map1, map2, HeatMapFilter.getDefaultCascadingFilter(0.1f));
+        HeatMap cascade2 = HeatMap.applyFilter(map1, map2, HeatMapFilter.getDefaultCascadingFilter(0.5f));
+        HeatMap cascade3 = HeatMap.applyFilter(map1, map2, HeatMapFilter.getDefaultCascadingFilter(0.9f));
+
+        System.out.println("F_SUM: " + average + " SUM " + average.getTotal());
+        System.out.println("F_AVG: " + sum + " SUM " + sum.getTotal());
+        System.out.println("CASC1: " + cascade1 + " SUM " + cascade1.getTotal());
+        System.out.println("CASC2: " + cascade2 + " SUM " + cascade2.getTotal());
+        System.out.println("CASC3: " + cascade3 + " SUM " + cascade3.getTotal());
 
     }
 
@@ -493,103 +504,113 @@ public class HeatMap<K extends Comparable> {
      */
     public static abstract class HeatMapFilter<K extends Comparable> {
 
+        protected HeatMap<K> destination;
+        protected int sources;
+
         /**
          * Applies the filter to a single destination from three sources
          *
-         * @param destination
+         * @param destination the HeatMap to write to, or null to write to a new
          * @param source
          * @return the destination HeatMap
          */
         public final HeatMap applyFilter(HeatMap<K> destination, HeatMap<K> source) {
-            preprocess(destination, 1);
-            process(source, destination, 1);
-            postprocess(destination, 1);
+            initialize(destination, 1);
+            preprocess();
+            process(source);
+            postprocess();
             return destination;
         }
 
         /**
          * Applies the filter to a single destination from a single source
          *
-         * @param destination
+         * @param destination the HeatMap to write to, or null to write to a new
          * @param source1
          * @param source2
          * @return the destination HeatMap
          */
         public final HeatMap applyFilter(HeatMap<K> destination, HeatMap<K> source1, HeatMap<K> source2) {
-            preprocess(destination, 2);
-            process(source1, destination, 2);
-            process(source2, destination, 2);
-            postprocess(destination, 2);
+            initialize(destination, 2);
+            preprocess();
+            process(source1);
+            process(source2);
+            postprocess();
             return destination;
         }
 
         /**
          * Applies the filter to a single destination from two sources
          *
-         * @param destination
+         * @param destination the HeatMap to write to, or null to write to a new
          * @param source1
          * @param source2
          * @param source3
          * @return the destination HeatMap
          */
         public final HeatMap applyFilter(HeatMap<K> destination, HeatMap<K> source1, HeatMap<K> source2, HeatMap<K> source3) {
-            preprocess(destination, 3);
-            process(source1, destination, 3);
-            process(source2, destination, 3);
-            process(source3, destination, 3);
-            postprocess(destination, 3);
+            initialize(destination, 3);
+            preprocess();
+            process(source1);
+            process(source2);
+            process(source3);
+            postprocess();
             return destination;
         }
 
         /**
          * Applies the filter to a single destination from multiple sources
          *
-         * @param destination
+         * @param destination the HeatMap to write to, or null to write to a new
          * @param sources
          * @return the destination HeatMap
          */
         public final HeatMap applyFilter(HeatMap<K> destination, HeatMap<K>[] sources) {
-            preprocess(destination, sources.length);
+            initialize(destination, sources.length);
+            preprocess();
             for (HeatMap<K> source : sources) {
-                process(source, destination, sources.length);
+                process(source);
             }
-            postprocess(destination, sources.length);
+            postprocess();
             return destination;
         }
 
         /**
          * Applies the filter to a single destination from multiple sources
          *
-         * @param destination
+         * @param destination the HeatMap to write to, or null to write to a new
+         * HeatMap
          * @param sources
          * @return the destination HeatMap
          */
         public final HeatMap applyFilter(HeatMap<K> destination, Collection<HeatMap<K>> sources) {
-            preprocess(destination, sources.size());
+            initialize(destination, sources.size());
+            preprocess();
             for (HeatMap<K> source : sources) {
-                process(source, destination, sources.size());
+                process(source);
             }
-            postprocess(destination, sources.size());
+            postprocess();
             return destination;
+        }
+
+        private void initialize(HeatMap<K> destination, int sources) {
+            this.destination = destination;
+            this.sources = sources;
         }
 
         /**
          * Hook method called before any processing is done
-         *
-         * @param destination the destination HeatMap
-         * @param count the number of sources
          */
-        public void preprocess(HeatMap<K> destination, float count) {
-
+        public void preprocess() {
+            if (destination == null) {
+                destination = new HeatMap();
+            }
         }
 
         /**
          * Hook method called after all processing is done
-         *
-         * @param destination the destination HeatMap
-         * @param count the number of sources
          */
-        public void postprocess(HeatMap<K> destination, float count) {
+        public void postprocess() {
 
         }
 
@@ -598,37 +619,113 @@ public class HeatMap<K extends Comparable> {
          * method will be called for every source when merged or applied.
          *
          * HeatMap includes protected methods for data verification. Study the
-         * JavaDoc for any Protected methods inside HeatMap.
+         * JavaDoc for any Protected methods inside HeatMap. In addition, the
+         * filter should have two initialized protected-access fields -
+         * destination and sources.
          *
          * @param source the current source to get data from
-         * @param destination the destination to write data into
-         * @param count the number of sources
          */
-        public abstract void process(HeatMap<K> source, HeatMap<K> destination, float count);
+        public abstract void process(HeatMap<K> source);
 
         /* DEFAULT FILTERS */
         /**
-         * Basic filter which finds the average of a set of maps.
+         * Filter to find the average of multiple heatmaps
+         *
+         * @return a filter instance
          */
-        public static final HeatMapFilter Average = new HeatMapFilter() {
+        public static final HeatMapFilter getDefaultAveragingFilter() {
+            return new HeatMapFilter() {
 
-            @Override
-            public void process(HeatMap source, HeatMap destination, float count) {
-                // Calculate the influence of each
-                float m = 1 / count;
+                private boolean normalize = true;
+                private float m;
 
-                // Apply to all the values
-                for (int i = 0; i < source.keys.size(); i++) {
-                    Comparable key = (Comparable) source.keys.get(i);
-
-                    int index = destination.keyToIndex(key);
-
-                    destination.touch(key, index);
-                    destination.values.overwriteValue(index, destination.values.getValue(i) + source.values.getValue(i) * m);
+                @Override
+                public void preprocess() {
+                    // Calculate the influence of each source
+                    m = 1f / sources;
                 }
-            }
-        };
 
+                @Override
+                public void process(HeatMap source) {
+                    // Modify normalization
+                    normalize &= source.normalized();
+
+                    // Add each map's value times its influence
+                    for (int i = 0; i < source.keys.size(); i++) {
+                        Comparable key = (Comparable) source.keys.get(i);
+
+                        int index = destination.keyToIndex(key);
+
+                        destination.touch(key, index);
+                        destination.values.overwriteValue(index, destination.values.getValue(i) + source.values.getValue(i) * m);
+                    }
+                }
+
+                @Override
+                public void postprocess() {
+                    // Restore the normalization of the map
+                    if (normalize) {
+                        destination.values.verifyNormalization();
+                    }
+                }
+            };
+        }
+
+        /**
+         * Filter to find the total sums of multiple heatmaps
+         *
+         * @return a filter instance
+         */
+        public static final HeatMapFilter getDefaultSummingFilter() {
+            return new HeatMapFilter() {
+
+                @Override
+                public void process(HeatMap source) {
+                    // Add each map's value times its influence
+                    for (int i = 0; i < source.keys.size(); i++) {
+                        Comparable key = (Comparable) source.keys.get(i);
+
+                        int index = destination.keyToIndex(key);
+
+                        destination.touch(key, index);
+                        destination.values.overwriteValue(index, destination.values.getValue(i) + source.values.getValue(i));
+                    }
+                }
+            };
+        }
+
+        /**
+         * Filter which cascades a value across all affected HeatMaps.
+         *
+         * The influence of subsequent maps can be calculated through i(n) = f *
+         * i(n-1) + (1 - f) * i(n-2)
+         *
+         * and follow the pattern i(0) = f, i(1) = f^2 - f, i(2) = f^3 - 2f^2 +
+         * f, i(3) = f^4 - 3f^3 + 3f^2 - f, ...
+         *
+         * @param influence the cascading influence factor (f). This should be
+         * between 0 and 1.
+         * @return a filter instance
+         */
+        public static final HeatMapFilter getDefaultCascadingFilter(final float influence) {
+            return new HeatMapFilter() {
+
+                private final float f = influence;
+                private final float finv = 1 - influence;
+
+                @Override
+                public void process(HeatMap source) {
+                    // Add each map's value times its influence
+                    for (int i = 0; i < source.keys.size(); i++) {
+                        Comparable key = (Comparable) source.keys.get(i);
+
+                        int index = destination.keyToIndex(key);
+
+                        destination.touch(key, index);
+                        destination.values.overwriteValue(index, (destination.values.getValue(i) * f) + (source.values.getValue(i) * finv));
+                    }
+                }
+            };
+        }
     }
-
 }
