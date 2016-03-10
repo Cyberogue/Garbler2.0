@@ -237,6 +237,16 @@ public class HeatMap<K extends Comparable> {
     }
 
     /**
+     * Flags the HeatMap as normalized if the sum of its values equals 1.0f or
+     * 0f (+/-.00001f)
+     *
+     * @return true if the List is normalized, false otherwise
+     */
+    public boolean verifyNormalization() {
+        return values.verifyNormalization();
+    }
+
+    /**
      * Returns a read-only Collection of all the entries in the HeatMap as
      * key-value pairs
      *
@@ -333,6 +343,25 @@ public class HeatMap<K extends Comparable> {
             }
         }
         return low;
+    }
+
+    /**
+     * Retrieves the key stored at a given index
+     *
+     * @param index the index to retrieve
+     * @return a key object
+     */
+    protected K indexToKey(int index) {
+        return keys.get(index);
+    }
+
+    /**
+     * Returns a HeatList of values by indeces rather than by key
+     *
+     * @return a HeatList of values
+     */
+    protected HeatList getHeatList() {
+        return values;
     }
 
     /**
@@ -477,8 +506,8 @@ public class HeatMap<K extends Comparable> {
             map2.increment(r.nextInt(5));
         }
 
-        System.out.println("MAP 1: " + map1 + " SUM " + map1.getTotal());
-        System.out.println("MAP 2: " + map2 + " SUM " + map2.getTotal());
+        System.out.println("MAP 1: " + map1);
+        System.out.println("MAP 2: " + map2);
 
         HeatMap average = HeatMap.applyFilter(map1, map2, HeatMapFilter.getDefaultAveragingFilter());
         HeatMap sum = HeatMap.applyFilter(map1, map2, HeatMapFilter.getDefaultSummingFilter());
@@ -486,12 +515,28 @@ public class HeatMap<K extends Comparable> {
         HeatMap cascade2 = HeatMap.applyFilter(map1, map2, HeatMapFilter.getDefaultCascadingFilter(0.5f));
         HeatMap cascade3 = HeatMap.applyFilter(map1, map2, HeatMapFilter.getDefaultCascadingFilter(0.9f));
 
-        System.out.println("F_SUM: " + average + " SUM " + average.getTotal());
-        System.out.println("F_AVG: " + sum + " SUM " + sum.getTotal());
-        System.out.println("CASC1: " + cascade1 + " SUM " + cascade1.getTotal());
-        System.out.println("CASC2: " + cascade2 + " SUM " + cascade2.getTotal());
-        System.out.println("CASC3: " + cascade3 + " SUM " + cascade3.getTotal());
+        HeatMap copy = HeatMap.applyFilter(map1, map2, new HeatMapFilter<Integer>() {
+            @Override
+            public void process(HeatMap<Integer> source) {
+                for (int i = 0; i < source.size(); i++) {
+                    int key = source.indexToKey(i);
+                    int index = destination.keyToIndex(key);
 
+                    destination.touch(key, index);
+                    destination.getHeatList().overwriteValue(index, source.getHeatList().getValue(i));
+                }
+                if (source.normalized()) {
+                    destination.verifyNormalization();
+                }
+            }
+        });
+
+        System.out.println("F_AVG: " + average);
+        System.out.println("F_SUM: " + sum);
+        System.out.println("CASC1: " + cascade1);
+        System.out.println("CASC2: " + cascade2);
+        System.out.println("CASC3: " + cascade3);
+        System.out.println("F_CPY: " + copy);
     }
 
     /**
