@@ -21,13 +21,40 @@
  * OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN
  * THE SOFTWARE.
  */
-package me.aliceq.garbler;
+package me.aliceq.garbler.analyzer;
+
+import me.aliceq.garbler.GarblerAnalyzer;
+import me.aliceq.heatmap.HeatMap;
 
 /**
- * Configuration for a Garbler instance
+ * Analyzer module which maintains information on each character's influence on
+ * future characters
  *
  * @author Alice Quiros <email@aliceq.me>
  */
-public class GarblerConfig {
-    
+public class LetterInfluenceAnalyzer implements GarblerAnalyzer {
+
+    private final int maxRadius;
+
+    public LetterInfluenceAnalyzer() {
+        this.maxRadius = 5;
+    }
+
+    public LetterInfluenceAnalyzer(int maxRadius) {
+        this.maxRadius = maxRadius;
+    }
+
+    public int getMaxRadius() {
+        return maxRadius;
+    }
+
+    @Override
+    public void analyze(String word) {
+    }
+
+    @Override
+    public HeatMap<Character> getCurrentMap(String context, String wordPrefix) {
+        throw new UnsupportedOperationException("Not supported yet."); //To change body of generated methods, choose Tools | Templates.
+    }
+
 }

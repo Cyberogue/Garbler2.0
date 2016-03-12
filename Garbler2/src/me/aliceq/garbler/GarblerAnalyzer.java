@@ -23,11 +23,30 @@
  */
 package me.aliceq.garbler;
 
+import me.aliceq.heatmap.HeatMap;
+
 /**
- * Configuration for a Garbler instance
+ * Root interface for each analyzing module within Garbler
  *
  * @author Alice Quiros <email@aliceq.me>
  */
-public class GarblerConfig {
-    
+public interface GarblerAnalyzer {
+
+    /**
+     * Analyzes a passed word
+     *
+     * @param word the word to parse
+     */
+    public void analyze(String word);
+
+    /**
+     * Hook method which returns the current normalized HeatMap of character
+     * probabilities
+     *
+     * @param context the context the current word is in
+     * @param wordPrefix the currently worked-on word
+     * @return a normalized HeatMap of character probabilities for the current
+     * analyzer
+     */
+    public HeatMap<Character> getCurrentMap(String context, String wordPrefix);
 }

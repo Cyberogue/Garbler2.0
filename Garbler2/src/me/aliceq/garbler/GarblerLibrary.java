@@ -24,9 +24,9 @@
 package me.aliceq.garbler;
 
 /**
+ * Class containing all the data for a Garbler program
  *
  * @author Alice Quiros <email@aliceq.me>
  */
 public class GarblerLibrary {
-    
 }
