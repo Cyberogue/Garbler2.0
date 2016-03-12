@@ -253,7 +253,7 @@ public abstract class HeatMapFilter<K extends Comparable> {
                     int index = destination.keyToIndex(key);
 
                     destination.touch(key, index);
-                    destination.getHeatList().overwriteValue(index, (destination.getHeatList().getValue(i) * f) + (source.getHeatList().getValue(i) * finv));
+                    destination.getHeatList().overwriteValue(index, (destination.getHeatList().getValue(i) * finv) + (source.getHeatList().getValue(i) * f));
                 }
             }
         };
