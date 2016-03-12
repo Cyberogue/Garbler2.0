@@ -23,8 +23,14 @@
  */
 package me.aliceq.garbler.analyzer;
 
+import java.util.ArrayList;
+import java.util.HashMap;
+import java.util.Map;
 import me.aliceq.garbler.GarblerAnalyzer;
+import me.aliceq.garbler.GarblerTranslator;
+import me.aliceq.garbler.HeatMapCumulativeFilter;
 import me.aliceq.heatmap.HeatMap;
+import me.aliceq.heatmap.HeatMapFilter;
 
 /**
  * Analyzer module which maintains information on each character's influence on
@@ -34,27 +40,206 @@ import me.aliceq.heatmap.HeatMap;
  */
 public class LetterInfluenceAnalyzer implements GarblerAnalyzer {
 
+    // The maximum distance a character can have influence
     private final int maxRadius;
 
+    // Filter used to merge results
+    private final HeatMapFilter filter;
+
+    // Map of the distance-based heatmaps for each character
+    private final Map<Character, HeatMap<Character>[]> heatmaps = new HashMap();
+
+    /**
+     * Creates an analyzer of radius 3
+     */
     public LetterInfluenceAnalyzer() {
-        this.maxRadius = 5;
+        this(3, 0.5f);
     }
 
+    /**
+     * Creates a letter influence analyzer of influence 0.5
+     *
+     * @param maxRadius the maximum distance a character can have influence. The
+     * higher the influence radius the more memory is used.
+     */
     public LetterInfluenceAnalyzer(int maxRadius) {
-        this.maxRadius = maxRadius;
+        this(maxRadius, 0.5f);
     }
 
+    /**
+     * Creates a letter influence analyzer of radius 3
+     *
+     * @param influence the value to interpolate between successive HeatMaps.
+     * This should be a value between 0 and 1
+     */
+    public LetterInfluenceAnalyzer(float influence) {
+        this(3, influence);
+    }
+
+    /**
+     * Creates a letter influence analyzer
+     *
+     * @param maxRadius the maximum distance a character can have influence. The
+     * higher the influence radius the more memory is used.
+     * @param influence the value to interpolate between successive HeatMaps.
+     * This should be a value between 0 and 1
+     */
+    public LetterInfluenceAnalyzer(int maxRadius, float influence) {
+        if (maxRadius <= 0) {
+            throw new IllegalArgumentException("Radius must be greater than 0");
+        }
+        this.maxRadius = maxRadius;
+
+        final float i = influence;;
+        this.filter = HeatMapFilter.createFrom(new HeatMapFilter.SimpleFilter() {
+            private final float weight = i;
+            private float m;
+
+            @Override
+            public void preprocess() {
+                this.m = 1f;
+            }
+
+            @Override
+            public float process(float currentValue, float sourceValue, Comparable key) {
+                return currentValue + sourceValue * m;
+            }
+
+            @Override
+            public void preprocessSource() {
+                m *= weight;
+            }
+        });
+    }
+
+    /**
+     * Returns the maximum radius of influence
+     *
+     * @return the maximum radius of influence
+     */
     public int getMaxRadius() {
         return maxRadius;
     }
 
     @Override
     public void analyze(String word) {
+        // Only works for words > 2 long
+        if (word.length() <= 2) {
+            return;
+        }
+
+        // For each letter
+        for (int i = 0; i < word.length() - 1; i++) {
+            // Find the number of letters to count
+            int letterCount = word.length() - i - 1;
+            if (letterCount > maxRadius) {
+                letterCount = maxRadius;
+            }
+
+            // Fetch current entry
+            HeatMap<Character>[] imap = heatmaps.get(word.charAt(i));
+
+            // Check if we need a new entry
+            if (imap == null || imap.length < letterCount) {
+                HeatMap<Character>[] maps = new HeatMap[letterCount]; // Make a new array
+
+                int copy = 0; // Index to copy
+                if (imap != null) {
+                    // Copy any values
+                    copy = imap.length;
+                    System.arraycopy(imap, 0, maps, 0, copy);
+                }
+
+                // Initialize values
+                for (int j = copy; j < maps.length; j++) {
+                    maps[j] = new HeatMap();
+                }
+
+                heatmaps.put(word.charAt(i), maps); // Add the map
+
+                imap = maps; // Set the current heatmap
+            }
+
+            // System.out.println(current.length);
+            for (int j = i; j < i + letterCount; j++) {
+                int dif = j - i;
+                imap[dif].increment(word.charAt(j + 1));
+            }
+        }
     }
 
     @Override
-    public HeatMap<Character> getCurrentMap(String context, String wordPrefix) {
-        throw new UnsupportedOperationException("Not supported yet."); //To change body of generated methods, choose Tools | Templates.
+    public HeatMap<Character> getProbabilities(String context, String wordPrefix) {
+        // Find the number of letters to count
+        int letterCount = wordPrefix.length() > maxRadius ? maxRadius : wordPrefix.length();
+        int minSize = 10;
+
+        // Loop to get all maps
+        ArrayList<HeatMap> sources = new ArrayList();
+        for (int i = 0; i < letterCount; i++) {
+            char c = wordPrefix.charAt(wordPrefix.length() - 1 - i);
+
+            // Check if a heatmap exists
+            HeatMap[] current = heatmaps.get(c);
+            if (current != null && current.length > i) {
+                sources.add(current[i]);
+                if (current[i].size() < minSize) {
+                    minSize = current[i].size();
+                }
+            } else {
+                sources.add(null);
+            }
+        }
+        // Interpolate all the maps
+        HeatMap result = new HeatMap(minSize);
+        filter.applyFilter(result, sources);
+        result.normalizeAll();
+
+        return result;
     }
 
+    public static void main(String[] args) {
+        LetterInfluenceAnalyzer analyzer = new LetterInfluenceAnalyzer();
+        GarblerTranslator input = GarblerTranslator.caseInsensitive;
+        GarblerTranslator output;
+
+        try {
+            output = GarblerTranslator.createFromFile("testfile.gtf");
+
+        } catch (Exception e) {
+            System.out.println(e);
+            return;
+        }
+
+        String test = "Hello world, my name is Alice Quiros. This is a sample string.";
+
+        // Transpose and print
+        System.out.println("RAW: " + test);
+
+        test = input.transpose(test);
+        System.out.println(" IN: " + test);
+        System.out.println("OUT: " + output.transpose(test));
+
+        // Analyze and print
+        for (String s : test.split("[^\\w\\d\\p{L}']")) {
+            analyzer.analyze(s);
+        }
+
+        for (char c = 'a'; c <= 'z'; c++) {
+            if (analyzer.heatmaps.containsKey(c)) {
+                String s = c + ": ";
+                for (HeatMap map : analyzer.heatmaps.get(c)) {
+                    s += map.toString() + ", ";
+                }
+                System.out.println(s);
+            }
+        }
+
+        // Find probabilities
+        System.out.println("HEL: " + analyzer.getProbabilities("", "hel"));
+        System.out.println("ALICE: " + analyzer.getProbabilities("", "alice"));
+        System.out.println("LOREM: " + analyzer.getProbabilities("", "lorem"));
+        System.out.println("LOREM_C: " + new HeatMapCumulativeFilter().applyFilter(new HeatMap(), analyzer.getProbabilities("", "lorem")));
+
+    }
 }

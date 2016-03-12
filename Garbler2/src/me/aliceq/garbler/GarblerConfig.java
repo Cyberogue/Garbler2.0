@@ -29,5 +29,6 @@ package me.aliceq.garbler;
  * @author Alice Quiros <email@aliceq.me>
  */
 public class GarblerConfig {
-    
+
+    public String delimiters = "[^\\w\\d\\p{L}']";  // Only alphanumeric characters, accented characters and single quotation mark allowed
 }

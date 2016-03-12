@@ -23,30 +23,28 @@
  */
 package me.aliceq.garbler;
 
+import me.aliceq.heatmap.HeatList;
 import me.aliceq.heatmap.HeatMap;
+import me.aliceq.heatmap.HeatMapFilter;
 
 /**
- * Root interface for each analyzing module within Garbler
+ * Single-shot filter which creates a cumulative unbounded HeatMap from a source
+ * HeatMap. Ordering is not guaranteed.
  *
  * @author Alice Quiros <email@aliceq.me>
  */
-public interface GarblerAnalyzer {
+public class HeatMapCumulativeFilter extends HeatMapFilter {
 
-    /**
-     * Analyzes a passed word
-     *
-     * @param word the word to parse
-     */
-    public void analyze(String word);
+    @Override
+    public void process(HeatMap source) {
+        destination.Clear();
+        HeatList cumulative = HeatList.getCumulative(source.getHeatList());
+        for (int i = 0; i < source.size(); i++) {
+            Comparable key = source.getKey(i);
+            destination.touch(key);
+            destination.getHeatList().overwriteValue(i, cumulative.getValue(i));
+        }
+        destination.verifyNormalization();
+    }
 
-    /**
-     * Hook method which returns the current normalized HeatMap of character
-     * probabilities
-     *
-     * @param context the context the current word is in
-     * @param wordPrefix the currently worked-on word
-     * @return a normalized HeatMap of character probabilities for the current
-     * analyzer
-     */
-    public HeatMap<Character> getProbabilities(String context, String wordPrefix);
 }

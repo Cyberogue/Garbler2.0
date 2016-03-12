@@ -524,7 +524,7 @@ public class HeatList {
      * @param value the new value
      * @return the old value at the index
      */
-    protected float overwriteValue(int index, float value) {
+    public float overwriteValue(int index, float value) {
         if (index < 0 || index >= values.length) {
             throw new IndexOutOfBoundsException();
         }

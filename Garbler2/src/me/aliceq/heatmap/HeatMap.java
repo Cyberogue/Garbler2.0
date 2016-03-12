@@ -80,6 +80,14 @@ public class HeatMap<K extends Comparable> {
     }
 
     /**
+     * Forces normalization of the HeatMap by scaling each value to make their
+     * sum equal 1
+     */
+    public void normalizeAll() {
+        values.normalize();
+    }
+
+    /**
      * Returns the total sum of all values in the HeatMap
      *
      * @return the total sum of all values in the HeatMap
@@ -174,8 +182,16 @@ public class HeatMap<K extends Comparable> {
      * @param index the index
      * @return the key at the specified index
      */
-    protected K getKey(int index) {
+    public K getKey(int index) {
         return keys.get(index);
+    }
+
+    /**
+     * Clears the HeatMap
+     */
+    public void Clear() {
+        keys.clear();
+        values.clear();
     }
 
     /**
@@ -327,7 +343,7 @@ public class HeatMap<K extends Comparable> {
      * @param key the key to check
      * @return the index to place the key into
      */
-    protected int keyToIndex(K key) {
+    public int keyToIndex(K key) {
         int low = 0, high = keys.size();
         while (high != low) {
             int mid = (low + high) / 2;
@@ -351,7 +367,7 @@ public class HeatMap<K extends Comparable> {
      * @param index the index to retrieve
      * @return a key object
      */
-    protected K indexToKey(int index) {
+    public K indexToKey(int index) {
         return keys.get(index);
     }
 
@@ -360,7 +376,7 @@ public class HeatMap<K extends Comparable> {
      *
      * @return a HeatList of values
      */
-    protected HeatList getHeatList() {
+    public HeatList getHeatList() {
         return values;
     }
 
@@ -371,7 +387,7 @@ public class HeatMap<K extends Comparable> {
      * @param key the key to check
      * @return true if the key exists at the given index
      */
-    protected boolean verifyKey(int index, K key) {
+    public boolean verifyKey(int index, K key) {
         if (index < 0 || index >= keys.size()) {
             throw new IndexOutOfBoundsException();
         }
@@ -386,7 +402,7 @@ public class HeatMap<K extends Comparable> {
      * @param key the key to add
      * @param index the index to push the key into
      */
-    protected void pushKey(K key, int index) {
+    public void pushKey(K key, int index) {
         values.addNewIndex(index);
         keys.add(index, key);
     }
@@ -401,7 +417,7 @@ public class HeatMap<K extends Comparable> {
      * @param key the key to verify
      * @return true if the key is valid at the given index
      */
-    protected boolean checkValidity(int index, K key) {
+    public boolean checkValidity(int index, K key) {
         if (index < 0 || index > keys.size()) {
             throw new IndexOutOfBoundsException();
         }

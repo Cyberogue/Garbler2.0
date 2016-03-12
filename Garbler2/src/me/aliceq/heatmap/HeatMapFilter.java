@@ -260,25 +260,150 @@ public abstract class HeatMapFilter<K extends Comparable> {
     }
 
     /**
-     * Simple filter which creates a copy of the source
+     * Filter which creates a copy of the source
      *
      * @return a filter instance
      */
     public static final HeatMapFilter getDefaultCopyFilter() {
-        return new HeatMapFilter<Integer>() {
+        return new HeatMapFilter() {
             @Override
-            public void process(HeatMap<Integer> source) {
+            public void process(HeatMap source) {
                 for (int i = 0; i < source.size(); i++) {
-                    int key = source.indexToKey(i);
+                    Comparable key = (Comparable) source.indexToKey(i);
                     int index = destination.keyToIndex(key);
 
                     destination.touch(key, index);
                     destination.getHeatList().overwriteValue(index, source.getHeatList().getValue(i));
                 }
+
                 if (source.normalized()) {
                     destination.verifyNormalization();
                 }
             }
+
         };
+    }
+
+    /**
+     * Creates a HeatMapFilter wrapper for a SimpleFilter implementation. Note
+     * that this wrapper attempts normalization if it can which makes it
+     * slightly slower than a standard HeatMapFilter implementation. In
+     * addition, null sources will be passed as a sourceValue of 0 to allow for
+     * cascading effects.
+     *
+     * @param filter the filter to wrap
+     * @return a new HeatMapFilter instance
+     */
+    public static final HeatMapFilter createFrom(final SimpleFilter filter) {
+        return new HeatMapFilter() {
+
+            private boolean normalize = true;
+            private final SimpleFilter subfilter = filter;
+
+            @Override
+            public void preprocess() {
+                filter.preprocess();
+            }
+
+            @Override
+            public void process(HeatMap source) {
+                filter.preprocessSource();
+
+                // If null source only affect destination
+                if (source == null) {
+                    for (int i = 0; i < destination.size(); i++) {
+                        Comparable key = (Comparable) destination.indexToKey(i);
+                        float value = subfilter.process(destination.getHeatList().getValue(i), 0f, key);
+                        destination.getHeatList().overwriteValue(i, value);
+                    }
+                    return;
+                }
+
+                // Iterate through maps
+                for (int i = 0; i < source.size(); i++) {
+                    // Modify normalization
+                    normalize &= source.normalized();
+
+                    // Overhead stuffs
+                    Comparable key = (Comparable) source.indexToKey(i);
+
+                    int index = destination.keyToIndex(key);
+
+                    destination.touch(key, index);
+                    float value = subfilter.process(destination.getHeatList().getValue(i), source.getHeatList().getValue(i), key);
+                    destination.getHeatList().overwriteValue(index, value);
+                }
+
+                filter.postprocessSource();
+            }
+
+            @Override
+            public void postprocess() {
+                filter.postprocess();
+                if (normalize) {
+                    destination.verifyNormalization();
+                }
+            }
+        };
+    }
+
+    /**
+     * An abstract class to remove some of the overhead involved with a
+     * HeatMapFilter. Note that this works far differently than a standard
+     * HeatMapFilter but may produce the same effects.
+     *
+     * In order to utilize this class, override the process(float, float, K)
+     * method. This is called on every key from every source. The current value
+     * held at the current key is passed through currentValue. The value at the
+     * key from the source is sourceValue, and the final parameter states which
+     * key being modifier.
+     *
+     * The return value should be the new value to write to the destination
+     *
+     * In addition, you may override the preprocess, sourceprocess and
+     * postprocess methods which are respectively called once per use.
+     *
+     * @param <K> the type of key
+     */
+    public static abstract class SimpleFilter {
+
+        /**
+         * Primary hook method which returns a new value from a combination of
+         * parameters.
+         *
+         * @param currentValue the current value of the resulting HeatMap
+         * @param sourceValue the current value of the source HeatMap
+         * @param key the key being modified
+         * @return the new value to write into the result HeatMap
+         */
+        public abstract float process(float currentValue, float sourceValue, Comparable key);
+
+        /**
+         * Hook method called before any value filtering is done
+         */
+        public void preprocess() {
+
+        }
+
+        /**
+         * Hook method called after all value filtering is done
+         */
+        public void postprocess() {
+
+        }
+
+        /**
+         * Hook method called once per source before any filtering is done on it
+         */
+        public void preprocessSource() {
+
+        }
+
+        /**
+         * Hook method called once per source after all filtering is done on it
+         */
+        public void postprocessSource() {
+
+        }
     }
 }

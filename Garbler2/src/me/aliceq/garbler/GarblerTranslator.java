@@ -154,19 +154,10 @@ public abstract class GarblerTranslator {
             }
         }
 
-        return new GarblerTranslator.MapBased(mapping);
-    }
+        // Dump file
+        reader.close();
 
-    public static void main(String[] args) {
-        try {
-            GarblerTranslator t = GarblerTranslator.createFromFile("testfile.gtf");
-            String s = "Hello World, my name is Alice Quiros and this is a test";
-            s = GarblerTranslator.caseInsensitive.transpose(s);
-            System.out.println(s);
-            System.out.println(t.transpose(s));
-        } catch (Exception e) {
-            System.out.println(e);
-        }
+        return new GarblerTranslator.MapBased(mapping);
     }
 
     /**
