@@ -90,7 +90,7 @@ public class LetterInfluenceAnalyzer implements GarblerAnalyzer {
         }
         this.maxRadius = maxRadius;
 
-        final float i = influence;;
+        final float i = influence;
         this.filter = HeatMapFilter.createFrom(new HeatMapFilter.SimpleFilter() {
             private final float weight = i;
             private float m;
@@ -169,7 +169,7 @@ public class LetterInfluenceAnalyzer implements GarblerAnalyzer {
     }
 
     @Override
-    public HeatMap<Character> getProbabilities(String context, String wordPrefix) {
+    public HeatMap<String> getProbabilities(String context, String wordPrefix) {
         // Find the number of letters to count
         int letterCount = wordPrefix.length() > maxRadius ? maxRadius : wordPrefix.length();
         int minSize = 10;
@@ -199,19 +199,17 @@ public class LetterInfluenceAnalyzer implements GarblerAnalyzer {
     }
 
     public static void main(String[] args) {
-        LetterInfluenceAnalyzer analyzer = new LetterInfluenceAnalyzer();
         GarblerTranslator input = GarblerTranslator.caseInsensitive;
         GarblerTranslator output;
 
         try {
             output = GarblerTranslator.createFromFile("testfile.gtf");
-
         } catch (Exception e) {
             System.out.println(e);
             return;
         }
 
-        String test = "Hello world, my name is Alice Quiros. This is a sample string.";
+        String test = "Hello world, my name is Alice Quiros. This is a sample string. This is an ending, I am coding. Endings are lame.";
 
         // Transpose and print
         System.out.println("RAW: " + test);
@@ -221,25 +219,25 @@ public class LetterInfluenceAnalyzer implements GarblerAnalyzer {
         System.out.println("OUT: " + output.transpose(test));
 
         // Analyze and print
+        GarblerAnalyzer analyzer = new LetterInfluenceAnalyzer();
         for (String s : test.split("[^\\w\\d\\p{L}']")) {
             analyzer.analyze(s);
-        }
-
-        for (char c = 'a'; c <= 'z'; c++) {
-            if (analyzer.heatmaps.containsKey(c)) {
-                String s = c + ": ";
-                for (HeatMap map : analyzer.heatmaps.get(c)) {
-                    s += map.toString() + ", ";
-                }
-                System.out.println(s);
-            }
         }
 
         // Find probabilities
         System.out.println("HEL: " + analyzer.getProbabilities("", "hel"));
         System.out.println("ALICE: " + analyzer.getProbabilities("", "alice"));
         System.out.println("LOREM: " + analyzer.getProbabilities("", "lorem"));
-        System.out.println("LOREM_C: " + new HeatMapCumulativeFilter().applyFilter(new HeatMap(), analyzer.getProbabilities("", "lorem")));
 
+        // Analyze 2
+        analyzer = new WordEndingAnalyzer(2, 4);
+        for (String s : test.split("[^\\w\\d\\p{L}']")) {
+            analyzer.analyze(s);
+        }
+
+        // Find probabilities
+        System.out.println("HEL: " + analyzer.getProbabilities("", "hel"));
+        System.out.println("ALICE: " + analyzer.getProbabilities("", "alice"));
+        System.out.println("LOREM: " + analyzer.getProbabilities("", "lorem"));
     }
 }
