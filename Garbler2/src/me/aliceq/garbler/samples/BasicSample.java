@@ -21,33 +21,15 @@
  * OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN
  * THE SOFTWARE.
  */
-package me.aliceq.garbler;
-
-import me.aliceq.heatmap.HeatMap;
+package me.aliceq.garbler.samples;
 
 /**
- * Root interface for each analyzing module within Garbler
  *
  * @author Alice Quiros <email@aliceq.me>
- * @param <E> The type of return value, usually String, Character or Integer
  */
-public interface GarblerAnalyzer<E extends Comparable> {
+public class BasicSample {
 
-    /**
-     * Analyzes a passed word
-     *
-     * @param word the word to parse
-     */
-    public void analyze(String word);
-
-    /**
-     * Hook method which returns the current normalized HeatMap of String
-     * probabilities
-     *
-     * @param context the context the current word is in
-     * @param wordPrefix the currently worked-on word
-     * @return a normalized HeatMap of String probabilities for the current
-     * analyzer
-     */
-    public HeatMap<E> getProbabilities(String context, String wordPrefix);
+    public static void main(String[] args) {
+        System.out.println("Start");
+    }
 }

@@ -28,7 +28,6 @@ import java.util.HashMap;
 import java.util.Map;
 import me.aliceq.garbler.GarblerAnalyzer;
 import me.aliceq.garbler.GarblerTranslator;
-import me.aliceq.garbler.HeatMapCumulativeFilter;
 import me.aliceq.heatmap.HeatMap;
 import me.aliceq.heatmap.HeatMapFilter;
 
@@ -38,7 +37,7 @@ import me.aliceq.heatmap.HeatMapFilter;
  *
  * @author Alice Quiros <email@aliceq.me>
  */
-public class LetterInfluenceAnalyzer implements GarblerAnalyzer {
+public class LetterInfluenceAnalyzer implements GarblerAnalyzer<Character> {
 
     // The maximum distance a character can have influence
     private final int maxRadius;
@@ -169,7 +168,7 @@ public class LetterInfluenceAnalyzer implements GarblerAnalyzer {
     }
 
     @Override
-    public HeatMap<String> getProbabilities(String context, String wordPrefix) {
+    public HeatMap<Character> getProbabilities(String context, String wordPrefix) {
         // Find the number of letters to count
         int letterCount = wordPrefix.length() > maxRadius ? maxRadius : wordPrefix.length();
         int minSize = 10;
@@ -196,48 +195,5 @@ public class LetterInfluenceAnalyzer implements GarblerAnalyzer {
         result.normalizeAll();
 
         return result;
-    }
-
-    public static void main(String[] args) {
-        GarblerTranslator input = GarblerTranslator.caseInsensitive;
-        GarblerTranslator output;
-
-        try {
-            output = GarblerTranslator.createFromFile("testfile.gtf");
-        } catch (Exception e) {
-            System.out.println(e);
-            return;
-        }
-
-        String test = "Hello world, my name is Alice Quiros. This is a sample string. This is an ending, I am coding. Endings are lame.";
-
-        // Transpose and print
-        System.out.println("RAW: " + test);
-
-        test = input.transpose(test);
-        System.out.println(" IN: " + test);
-        System.out.println("OUT: " + output.transpose(test));
-
-        // Analyze and print
-        GarblerAnalyzer analyzer = new LetterInfluenceAnalyzer();
-        for (String s : test.split("[^\\w\\d\\p{L}']")) {
-            analyzer.analyze(s);
-        }
-
-        // Find probabilities
-        System.out.println("HEL: " + analyzer.getProbabilities("", "hel"));
-        System.out.println("ALICE: " + analyzer.getProbabilities("", "alice"));
-        System.out.println("LOREM: " + analyzer.getProbabilities("", "lorem"));
-
-        // Analyze 2
-        analyzer = new WordEndingAnalyzer(2, 4);
-        for (String s : test.split("[^\\w\\d\\p{L}']")) {
-            analyzer.analyze(s);
-        }
-
-        // Find probabilities
-        System.out.println("HEL: " + analyzer.getProbabilities("", "hel"));
-        System.out.println("ALICE: " + analyzer.getProbabilities("", "alice"));
-        System.out.println("LOREM: " + analyzer.getProbabilities("", "lorem"));
     }
 }

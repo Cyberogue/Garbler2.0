@@ -23,31 +23,24 @@
  */
 package me.aliceq.garbler;
 
-import me.aliceq.heatmap.HeatMap;
+import java.util.Random;
+import me.aliceq.heatmap.HeatMapFilter;
 
 /**
- * Root interface for each analyzing module within Garbler
+ * Abstract utility class which simply offers methods for selecting a random
+ * object from HeatMaps returned by GarblerAnalyzers
  *
  * @author Alice Quiros <email@aliceq.me>
- * @param <E> The type of return value, usually String, Character or Integer
  */
-public interface GarblerAnalyzer<E extends Comparable> {
+public abstract class GarblerAnalysis {
 
-    /**
-     * Analyzes a passed word
-     *
-     * @param word the word to parse
-     */
-    public void analyze(String word);
+    private static final Random r = new Random();
+    private static final HeatMapFilter filter = new HeatMapCumulativeFilter();
 
-    /**
-     * Hook method which returns the current normalized HeatMap of String
-     * probabilities
-     *
-     * @param context the context the current word is in
-     * @param wordPrefix the currently worked-on word
-     * @return a normalized HeatMap of String probabilities for the current
-     * analyzer
-     */
-    public HeatMap<E> getProbabilities(String context, String wordPrefix);
+    public static <T> T pickRandom(HeatMap<T> map) {
+        HeatMap<T> cum = filter.applyFilter(new HeatMap<T>(), map);
+        System.out.println(cum);
+
+        return null;
+    }
 }

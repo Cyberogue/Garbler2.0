@@ -36,7 +36,7 @@ import me.aliceq.heatmap.HeatMap;
  *
  * @author Alice Quiros <email@aliceq.me>
  */
-public class WordEndingAnalyzer implements GarblerAnalyzer {
+public class WordEndingAnalyzer implements GarblerAnalyzer<String> {
 
     private final int minRadius;
     private final int maxRadius;
