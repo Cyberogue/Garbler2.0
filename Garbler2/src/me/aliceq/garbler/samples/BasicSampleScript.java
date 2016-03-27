@@ -35,20 +35,29 @@ public class BasicSampleScript extends GarblerScript {
 
     @Override
     public void onStart() {
-        System.out.println("Script start");
     }
 
     @Override
     public void onComplete(String context) {
-        System.out.println("Script complete");
         System.out.println(context);
     }
 
     @Override
     public void preIterate(String context) {
-        // Get word length from word lengths
-        iterations = (Integer) GarblerAnalysis.pickRandom(analyzer("WORDLENGTH").getProbabilities(context, "")) - 1;
+        // Pick a word length from the current character
         buffer = "" + (Character) GarblerAnalysis.pickRandom(analyzer("FIRSTCHAR").getProbabilities(context, ""));
+        HeatMap correlation = analyzer("CHARCORRELATION").getProbabilities(context, buffer);
+
+        if (correlation == null) {
+            // Pick the word length at random
+            iterations = (Integer) GarblerAnalysis.pickRandom(analyzer("WORDLENGTH").getProbabilities(context, ""));
+        } else {
+            // Pick the word length from the list of lengths
+            // This is done to prevent 1-letter long words that don't make sense
+            iterations = (Integer) GarblerAnalysis.pickRandom(correlation);
+        }
+
+        iterations -= 2;    // Padding for word endings
     }
 
     @Override

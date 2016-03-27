@@ -26,6 +26,7 @@ package me.aliceq.garbler;
 import java.util.HashMap;
 import java.util.Map;
 import java.util.Set;
+import me.aliceq.garbler.analyzer.CharLengthCorrelationAnalyzer;
 import me.aliceq.garbler.analyzer.LetterInfluenceAnalyzer;
 import me.aliceq.garbler.analyzer.SimpleWordLengthAnalyzer;
 import me.aliceq.garbler.analyzer.WordBeginAnalyzer;
@@ -39,6 +40,8 @@ import me.aliceq.garbler.analyzer.WordEndingAnalyzer;
  */
 public final class GarblerLibrary {
 
+    private final String delim;
+    private boolean selffeed = false;
     private final Map<String, GarblerAnalyzer<Comparable>> analyzers;
     private boolean lock = false;
     private int analyzed = 0;
@@ -47,36 +50,50 @@ public final class GarblerLibrary {
 
     /**
      * Creates an instance with no output filter and a case-insensitive input
-     * filter
+     * filter. By default, this creates a delimiter regex of [^\\w`'-]+
+     *
      */
     public GarblerLibrary() {
-        this(GarblerTranslator.caseInsensitive);
+        this("[^\\w`'-]+", GarblerTranslator.caseInsensitive);
+    }
+
+    /**
+     * Creates an instance with no output filter and a case-insensitive input
+     * filter
+     *
+     * @param delim delimiter string to use when parsing text
+     */
+    public GarblerLibrary(String delim) {
+        this(delim, GarblerTranslator.caseInsensitive);
     }
 
     /**
      * Creates an instance with custom input and output filters
      *
+     * @param delim delimiter string to use when parsing text
      * @param filter the input filter
      */
-    public GarblerLibrary(GarblerTranslator filter) {
+    public GarblerLibrary(String delim, GarblerTranslator filter) {
         this.analyzers = new HashMap();
         this.filter = filter;
+        this.delim = delim;
     }
 
     /**
      * Runs a word through all GarblerAnalyzers stored. Note that after this is
-     * run no more analyzers may be added. By default, the delimiter used for
-     * splitting strings is [^\\w`'-]+
+     * run no more analyzers may be added. This uses the internal delimiter
+     * regex.
      *
      * @param text a series of words to analyze
      */
     public void analyze(String text) {
-        analyze(text, "[^\\w`'-]+");
+        analyze(text, null);
     }
 
     /**
      * Runs a word through all GarblerAnalyzers stored. Note that after this is
-     * run no more analyzers may be added.
+     * run no more analyzers may be added. A value of null causes the library to
+     * use its internally defined delimiter.
      *
      * @param text a series of words to analyze
      * @param delim regex delimiter to use for separating words
@@ -86,7 +103,8 @@ public final class GarblerLibrary {
         lock = true;
         int count = 0;
         String filtered = filter.transpose(text);
-        for (String word : filtered.split(delim)) {
+        String[] words = delim == null ? filtered.split(this.delim) : filtered.split(delim);
+        for (String word : words) {
             for (GarblerAnalyzer analyzer : analyzers.values()) {
                 analyzer.analyze(word);
             }
@@ -150,6 +168,9 @@ public final class GarblerLibrary {
                     s += script.createWord(s) + separator;
                 }
                 script.onComplete(s);
+                if (selffeed) {
+                    script.library.analyze(s);
+                }
             }
         }
         );
@@ -182,6 +203,26 @@ public final class GarblerLibrary {
     }
 
     /**
+     * If the library is self-feeding, it will automatically analyze any
+     * sentences it generates. This leads to more chaotic lines as more
+     * sentences are generated.
+     *
+     * @param enable true to enable self-feeding
+     */
+    public void selfFeed(boolean enable) {
+        this.selffeed = enable;
+    }
+
+    /**
+     * Checks whether or not the library is self-feeding
+     *
+     * @return true if the library self-feeds
+     */
+    public boolean isSelfFeeding() {
+        return this.selffeed;
+    }
+
+    /**
      * Loads the default set of analyzers. These are the following under the
      * given keys:<br>
      * <p>
@@ -189,6 +230,7 @@ public final class GarblerLibrary {
      * WORDLENGTH : SimpleWordLengthAnalyzer<br>
      * FIRSTCHAR : WordBeginAnalyzer<br>
      * ENDINGS : WordEndAnalyzer<br>
+     * CHARCORRELATION : CharLengthCorrelationAnalyzer<BR>
      *
      */
     public void loadDefaults() {
@@ -196,6 +238,28 @@ public final class GarblerLibrary {
         addAnalyzer("WORDLENGTH", new SimpleWordLengthAnalyzer());
         addAnalyzer("FIRSTCHAR", new WordBeginAnalyzer());
         addAnalyzer("ENDINGS", new WordEndingAnalyzer());
+        addAnalyzer("CHARCORRELATION", new CharLengthCorrelationAnalyzer());
+    }
+
+    /**
+     * Loads the default set of analyzers. These are the following under the
+     * given keys:<br>
+     * <p>
+     * LETTERS : LetterInfluenceAnalyzer<br>
+     * WORDLENGTH : SimpleWordLengthAnalyzer<br>
+     * FIRSTCHAR : WordBeginAnalyzer<br>
+     * ENDINGS : WordEndAnalyzer<br>
+     * CHARCORRELATION : CharLengthCorrelationAnalyzer<BR>
+     *
+     * @param radius radius of influence
+     * @param letterInfluence letter influence factor
+     */
+    public void loadDefaults(int radius, int letterInfluence) {
+        addAnalyzer("LETTERS", new LetterInfluenceAnalyzer(radius, letterInfluence));
+        addAnalyzer("WORDLENGTH", new SimpleWordLengthAnalyzer());
+        addAnalyzer("FIRSTCHAR", new WordBeginAnalyzer());
+        addAnalyzer("ENDINGS", new WordEndingAnalyzer(radius));
+        addAnalyzer("CHARCORRELATION", new CharLengthCorrelationAnalyzer());
     }
 
     /**

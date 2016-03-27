@@ -61,7 +61,7 @@ public class LetterInfluenceAnalyzer implements GarblerAnalyzer<Character> {
      * higher the influence radius the more memory is used.
      */
     public LetterInfluenceAnalyzer(int maxRadius) {
-        this(maxRadius, 0.1f);
+        this(maxRadius, 0.4f);
     }
 
     /**

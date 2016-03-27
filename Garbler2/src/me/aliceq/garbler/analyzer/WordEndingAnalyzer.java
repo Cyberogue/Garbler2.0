@@ -46,7 +46,16 @@ public class WordEndingAnalyzer implements GarblerAnalyzer<String> {
      * Constructor for an analyzer of endings min-2 max-3
      */
     public WordEndingAnalyzer() {
-        this(2, 3);
+        this(3);
+    }
+
+    /**
+     * Constructor
+     *
+     * @param maxRadius the maximum size to consider a word ending
+     */
+    public WordEndingAnalyzer(int maxRadius) {
+        this(2, maxRadius);
     }
 
     /**
@@ -127,7 +136,7 @@ public class WordEndingAnalyzer implements GarblerAnalyzer<String> {
                 }
             } else {
                 // We need to merge multiple of these
-                String newRev = reversed.substring(0, newLength > minRadius? minRadius : newLength);
+                String newRev = reversed.substring(0, newLength > minRadius ? minRadius : newLength);
 
                 // Add current
                 List<String> list = endings.get(reversed.charAt(newRev.length()));

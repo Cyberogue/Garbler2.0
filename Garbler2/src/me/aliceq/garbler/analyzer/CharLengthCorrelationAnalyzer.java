@@ -21,34 +21,53 @@
  * OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN
  * THE SOFTWARE.
  */
-package me.aliceq.garbler.samples;
+package me.aliceq.garbler.analyzer;
 
-import me.aliceq.garbler.GarblerLibrary;
-import me.aliceq.garbler.GarblerScript;
+import java.util.HashMap;
+import java.util.Map;
+import me.aliceq.garbler.GarblerAnalyzer;
+import me.aliceq.heatmap.HeatMap;
 
 /**
+ * Analyzer which keeps track of the correlation between the first letter in a
+ * word and its length
  *
  * @author Alice Quiros <email@aliceq.me>
  */
-public class BasicSample {
+public class CharLengthCorrelationAnalyzer implements GarblerAnalyzer<Integer> {
 
-    public static void main(String[] args) {
-        // Create a new library
-        GarblerLibrary library = new GarblerLibrary();
+    private Map<Character, HeatMap<Integer>> map = new HashMap();
 
-        // Load the default analyzers
-        library.loadDefaults();
-        System.out.println(library);
+    @Override
+    public void analyze(String word) {
+        if (word.length() < 0) {
+            return;
+        }
 
-        // Analyze lorem ipsum
-        String lorem = "Lorem ipsum dolor sit amet, consectetur adipiscing elit, sed do eiusmod tempor incididunt ut labore et dolore magna aliqua. Ut enim ad minim veniam, quis nostrud exercitation ullamco laboris nisi ut aliquip ex ea commodo consequat. Duis aute irure dolor in reprehenderit in voluptate velit esse cillum dolore eu fugiat nulla pariatur. Excepteur sint occaecat cupidatat non proident, sunt in culpa qui officia deserunt mollit anim id est laborum.";
-        library.analyze(lorem);
+        char first = word.charAt(0);
+        int length = word.length();
 
-        // Create a new script and run it
-        GarblerScript script = new BasicSampleScript();
-        library.run(script, 8);
-        library.run(script, 8);
-        library.run(script, 6);
-        library.run(script, 3);
+        HeatMap<Integer> heatmap = map.get(first);
+        if (heatmap == null) {
+            heatmap = new HeatMap();
+            map.put(first, heatmap);
+        }
+        heatmap.increment(length);
     }
+
+    @Override
+    public HeatMap<Integer> getProbabilities(String context, String wordPrefix) {
+        if (wordPrefix.length() < 1) {
+            return null;
+        }
+        char c = wordPrefix.charAt(0);
+        HeatMap<Integer> heatmap = map.get(c);
+        return heatmap;
+    }
+
+    @Override
+    public void clear() {
+        map.clear();
+    }
+
 }
