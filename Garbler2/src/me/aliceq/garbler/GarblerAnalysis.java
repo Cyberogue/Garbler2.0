@@ -42,7 +42,7 @@ public abstract class GarblerAnalysis {
     private static final HeatMapFilter filter = new HeatMapFilter() {
 
         @Override
-        public void process(HeatMap source) {
+        public synchronized void process(HeatMap source) {
             destination.Clear();
             HeatList cumulative = HeatList.getCumulative(source.getHeatList());
             for (int i = 0; i < source.size(); i++) {
@@ -60,7 +60,7 @@ public abstract class GarblerAnalysis {
      * @param map
      * @return
      */
-    public static Comparable pickRandom(HeatMap<Comparable> map) {
+    public synchronized static Comparable pickRandom(HeatMap<Comparable> map) {
         if (map == null) {
             return null;
         } else if (!map.normalized()) {

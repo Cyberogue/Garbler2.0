@@ -41,13 +41,11 @@ public class BasicSample {
         System.out.println(library);
 
         // Analyze lorem ipsum
-        library.analyzeFromFile("loremipsum.txt");
+        library.analyzeFromFile("seeds/pangram.txt");
 
         // Create a new script and run it
-        GarblerScript script = new BasicSampleScript();
-        library.run(script, 8);
-        library.run(script, 8);
-        library.run(script, 6);
-        library.run(script, 3);
+        for (int i = 0; i < 4; i++) {
+            library.run(new BasicSampleScript(), 8);
+        }
     }
 }

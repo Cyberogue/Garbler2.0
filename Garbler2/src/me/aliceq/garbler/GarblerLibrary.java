@@ -221,43 +221,41 @@ public final class GarblerLibrary {
     }
 
     /**
-     * Runs a script on a separate thread with this instance as its context
+     * Runs a script to generate a new sentence with this instance as its
+     * context
      *
      * @param script script to run
      * @param wordCount number of words to generate
+     * @throws IllegalStateException if nothing has been analyzed
      */
     public void run(final GarblerScript script, final int wordCount) {
         run(script, wordCount, ' ');
     }
 
     /**
-     * Runs a script on a separate thread with this instance as its context
+     * Runs a script to generate a new sentence with this instance as its
+     * context
      *
      * @param script script to run
      * @param wordCount number of words to generate
      * @param separator separator to place between words
+     * @throws IllegalStateException if nothing has been analyzed
      */
-    public void run(final GarblerScript script, final int wordCount, final char separator) {
-        script.library = this;
-        Thread thread = new Thread(new Runnable() {
-
-            @Override
-            public void run() {
-                String s = "";
-                script.onStart();
-                for (int i = 0; i < wordCount; i++) {
-                    s += script.createWord(s) + separator;
-                }
-                script.onComplete(s);
-                if (selffeed) {
-                    script.library.analyze(s);
-                }
-            }
+    public synchronized void run(final GarblerScript script, final int wordCount, final char separator) {
+        if (analyzed == 0) {
+            throw new IllegalStateException("Nothing has been analyzed");
         }
-        );
-        thread.setDaemon(false);
-        thread.setPriority(Thread.NORM_PRIORITY);
-        thread.start();
+
+        script.library = this;
+        String s = "";
+        script.onStart();
+        for (int i = 0; i < wordCount; i++) {
+            s += script.createWord(s) + separator;
+        }
+        script.onComplete(s);
+        if (selffeed) {
+            script.library.analyze(s);
+        }
     }
 
     /**

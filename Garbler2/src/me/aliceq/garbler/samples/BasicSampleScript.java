@@ -33,13 +33,16 @@ import me.aliceq.heatmap.HeatMap;
  */
 public class BasicSampleScript extends GarblerScript {
 
+    long startTime = 0;
+
     @Override
     public void onStart() {
+        startTime = System.currentTimeMillis();
     }
 
     @Override
     public void onComplete(String context) {
-        System.out.println(context);
+        System.out.println("[" + (System.currentTimeMillis() - startTime) + "ms] " + context);
     }
 
     @Override
