@@ -39,7 +39,7 @@ import me.aliceq.garbler.analyzer.WordEndingAnalyzer;
  */
 public final class GarblerLibrary {
 
-    private final Map<String, GarblerAnalyzer> analyzers;
+    private final Map<String, GarblerAnalyzer<Comparable>> analyzers;
     private boolean lock = false;
     private int analyzed = 0;
 
@@ -66,12 +66,12 @@ public final class GarblerLibrary {
     /**
      * Runs a word through all GarblerAnalyzers stored. Note that after this is
      * run no more analyzers may be added. By default, the delimiter used for
-     * splitting strings is [^a-bA-B0-9`'-]
+     * splitting strings is [^\\w`'-]+
      *
      * @param text a series of words to analyze
      */
     public void analyze(String text) {
-        analyze(text, "[^a-bA-B0-9`'-]");
+        analyze(text, "[^\\w`'-]+");
     }
 
     /**
@@ -117,7 +117,7 @@ public final class GarblerLibrary {
      * @param key key to check
      * @return a GarblerAnalyzer instance or null
      */
-    public GarblerAnalyzer getAnalyzer(String key) {
+    public GarblerAnalyzer<Comparable> getAnalyzer(String key) {
         return analyzers.get(key.toUpperCase());
     }
 
@@ -156,6 +156,20 @@ public final class GarblerLibrary {
         thread.setDaemon(false);
         thread.setPriority(Thread.NORM_PRIORITY);
         thread.start();
+    }
+
+    /**
+     * Clears all data from the library and analyzers but retains the current
+     * analyzer set. This also releases the adding block so new analyzers may be
+     * added.
+     */
+    public void clear() {
+        for (GarblerAnalyzer ga : analyzers.values()) {
+            ga.clear();
+        }
+        analyzed = 0;
+        lock = false;
+        System.gc();    // Probably just dumped a lot of data so call to clean it up
     }
 
     /**

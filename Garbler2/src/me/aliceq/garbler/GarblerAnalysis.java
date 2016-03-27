@@ -23,7 +23,11 @@
  */
 package me.aliceq.garbler;
 
+import java.util.Collection;
+import java.util.Map;
 import java.util.Random;
+import me.aliceq.heatmap.HeatList;
+import me.aliceq.heatmap.HeatMap;
 import me.aliceq.heatmap.HeatMapFilter;
 
 /**
@@ -35,14 +39,43 @@ import me.aliceq.heatmap.HeatMapFilter;
 public abstract class GarblerAnalysis {
 
     private static final Random r = new Random();
-    private static final HeatMapFilter filter = new HeatMapCumulativeFilter();
+    private static final HeatMapFilter filter = new HeatMapFilter() {
 
-    public static <T> T pickRandom(HeatMap<T> map) {
-        HeatMap<T> cum = filter.applyFilter(new HeatMap<T>(), map);
-        System.out.println(cum);
+        @Override
+        public void process(HeatMap source) {
+            destination.Clear();
+            HeatList cumulative = HeatList.getCumulative(source.getHeatList());
+            for (int i = 0; i < source.size(); i++) {
+                Comparable key = source.getKey(i);
+                destination.touch(key);
+                destination.getHeatList().overwriteValue(i, cumulative.getValue(i));
+            }
+            destination.verifyNormalization();
+        }
+    };
 
-        
-        
+    /**
+     * Picks a random element from a
+     *
+     * @param map
+     * @return
+     */
+    public static Comparable pickRandom(HeatMap<Comparable> map) {
+        if (map == null) {
+            return null;
+        } else if (!map.normalized()) {
+            map = map.copy();
+            map.normalizeAll();
+        }
+        HeatMap cum = filter.applyFilter(new HeatMap(), map);
+
+        float value = r.nextFloat();
+        Collection<Map.Entry<Comparable, Float>> entries = cum.entries();
+        for (Map.Entry<Comparable, Float> entry : entries) {
+            if (entry.getValue() >= value) {
+                return entry.getKey();
+            }
+        }
         return null;
     }
 }

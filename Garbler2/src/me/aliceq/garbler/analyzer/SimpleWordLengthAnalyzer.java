@@ -46,4 +46,9 @@ public class SimpleWordLengthAnalyzer implements GarblerAnalyzer<Integer> {
     public HeatMap<Integer> getProbabilities(String context, String wordPrefix) {
         return map;
     }
+
+    @Override
+    public void clear() {
+        map.Clear();
+    }
 }

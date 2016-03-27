@@ -127,7 +127,7 @@ public class WordEndingAnalyzer implements GarblerAnalyzer<String> {
                 }
             } else {
                 // We need to merge multiple of these
-                String newRev = reversed.substring(0, newLength);
+                String newRev = reversed.substring(0, newLength > minRadius? minRadius : newLength);
 
                 // Add current
                 List<String> list = endings.get(reversed.charAt(newRev.length()));
@@ -193,6 +193,11 @@ public class WordEndingAnalyzer implements GarblerAnalyzer<String> {
         }
 
         return new String(str);
+    }
+
+    @Override
+    public void clear() {
+        endings.clear();
     }
 
 }

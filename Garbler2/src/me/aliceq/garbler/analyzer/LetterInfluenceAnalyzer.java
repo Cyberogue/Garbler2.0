@@ -51,7 +51,7 @@ public class LetterInfluenceAnalyzer implements GarblerAnalyzer<Character> {
      * Creates an analyzer of radius 3
      */
     public LetterInfluenceAnalyzer() {
-        this(3, 0.5f);
+        this(1);
     }
 
     /**
@@ -61,7 +61,7 @@ public class LetterInfluenceAnalyzer implements GarblerAnalyzer<Character> {
      * higher the influence radius the more memory is used.
      */
     public LetterInfluenceAnalyzer(int maxRadius) {
-        this(maxRadius, 0.5f);
+        this(maxRadius, 0.1f);
     }
 
     /**
@@ -194,5 +194,10 @@ public class LetterInfluenceAnalyzer implements GarblerAnalyzer<Character> {
         result.normalizeAll();
 
         return result;
+    }
+
+    @Override
+    public void clear() {
+        heatmaps.clear();
     }
 }

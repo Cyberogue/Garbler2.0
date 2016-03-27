@@ -50,4 +50,10 @@ public interface GarblerAnalyzer<E extends Comparable> {
      * analyzer
      */
     public HeatMap<E> getProbabilities(String context, String wordPrefix);
+
+    /**
+     * Clears all data within the analyzer. This should be equivalent to making a
+     * new instance with the same configuration.
+     */
+    public void clear();
 }

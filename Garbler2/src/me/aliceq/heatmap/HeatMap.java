@@ -438,6 +438,18 @@ public class HeatMap<K extends Comparable> {
         return s;
     }
 
+    /**
+     * Creates a copy of the HeatMap with the same values and parameters
+     *
+     * @return a new HeatMap instance
+     */
+    public HeatMap<K> copy() {
+        HeatMap<K> map = new HeatMap();
+        map.keys = new ArrayList(keys);
+        map.values = values.copy();
+        return map;
+    }
+
     @Override
     public String toString() {
         if (keys.size() <= 0) {

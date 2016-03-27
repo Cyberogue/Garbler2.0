@@ -80,7 +80,7 @@ public abstract class GarblerScript {
         }
         postIterate(context);
 
-        String result = out.transpose(context);
+        String result = out.transpose(buffer);
         buffer = "";
         return result;
     }
@@ -134,9 +134,15 @@ public abstract class GarblerScript {
      * Gets the corresponding analyzer from the script's library
      *
      * @param key the key the analyzer is under
-     * @return a GarblerAnalyzer instance or null
+     * @return a GarblerAnalyzer instance
+     * @throws IllegalArgumentException if an invalid (non-existent) key is
+     * provided
      */
-    public final GarblerAnalyzer analyzer(String key) {
-        return library.getAnalyzer(key);
+    public final GarblerAnalyzer<Comparable> analyzer(final String key) {
+        GarblerAnalyzer<Comparable> a = library.getAnalyzer(key);
+        if (a == null) {
+            throw new IllegalArgumentException("Invalid analyzer key");
+        }
+        return a;
     }
 }

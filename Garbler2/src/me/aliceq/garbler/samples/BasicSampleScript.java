@@ -23,7 +23,9 @@
  */
 package me.aliceq.garbler.samples;
 
+import me.aliceq.garbler.GarblerAnalysis;
 import me.aliceq.garbler.GarblerScript;
+import me.aliceq.heatmap.HeatMap;
 
 /**
  *
@@ -44,21 +46,25 @@ public class BasicSampleScript extends GarblerScript {
 
     @Override
     public void preIterate(String context) {
-        System.out.println("Preiteration");
-        
         // Get word length from word lengths
-        iterations = 4;
+        iterations = (Integer) GarblerAnalysis.pickRandom(analyzer("WORDLENGTH").getProbabilities(context, "")) - 1;
+        buffer = "" + (Character) GarblerAnalysis.pickRandom(analyzer("FIRSTCHAR").getProbabilities(context, ""));
     }
 
     @Override
     public void onIterate(String context) {
-        System.out.println("Iteration");
-
+        buffer += (Character) GarblerAnalysis.pickRandom(analyzer("LETTERS").getProbabilities(context, buffer));
     }
 
     @Override
     public void postIterate(String context) {
-        System.out.println("Postiteration");
-
+        // See if there exists an ending
+        HeatMap probabilities = analyzer("ENDINGS").getProbabilities(context, buffer);
+        if (probabilities != null) {
+            String ending = (String) GarblerAnalysis.pickRandom(probabilities);
+            if (ending != null) {
+                buffer += ending;
+            }
+        }
     }
 }

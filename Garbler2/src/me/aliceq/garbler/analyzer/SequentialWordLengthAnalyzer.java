@@ -76,4 +76,9 @@ public class SequentialWordLengthAnalyzer implements GarblerAnalyzer<Integer> {
         }
 
     }
+
+    @Override
+    public void clear() {
+        lengths.clear();
+    }
 }

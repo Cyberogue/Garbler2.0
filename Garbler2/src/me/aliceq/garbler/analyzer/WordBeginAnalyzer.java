@@ -49,4 +49,9 @@ public class WordBeginAnalyzer implements GarblerAnalyzer<Character> {
     public HeatMap<Character> getProbabilities(String context, String wordPrefix) {
         return map;
     }
+
+    @Override
+    public void clear() {
+        map.Clear();
+    }
 }
