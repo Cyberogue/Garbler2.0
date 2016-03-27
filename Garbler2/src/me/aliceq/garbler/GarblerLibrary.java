@@ -332,8 +332,12 @@ public final class GarblerLibrary {
      *
      * @param radius radius of influence
      * @param letterInfluence letter influence factor
+     * @throws IllegalArgumentException if radius is less than 2
      */
-    public void loadDefaults(int radius, int letterInfluence) {
+    public void loadDefaults(int radius, float letterInfluence) {
+        if (radius < 2) {
+            throw new IllegalArgumentException("Radius has to be greater than 1");
+        }
         addAnalyzer("LETTERS", new LetterInfluenceAnalyzer(radius, letterInfluence));
         addAnalyzer("WORDLENGTH", new SimpleWordLengthAnalyzer());
         addAnalyzer("FIRSTCHAR", new WordBeginAnalyzer());

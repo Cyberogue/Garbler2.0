@@ -37,11 +37,12 @@ public class BasicSample {
         GarblerLibrary library = new GarblerLibrary();
 
         // Load the default analyzers
-        library.loadDefaults();
+        library.loadDefaults(2, 0.75f);
         System.out.println(library);
 
         // Analyze lorem ipsum
-        library.analyzeFromFile("seeds/pangram.txt");
+        library.analyzeFromFile("seeds/kafka.txt");
+        library.analyzeFromFile("seeds/loremipsum.txt");
 
         // Create a new script and run it
         for (int i = 0; i < 4; i++) {
