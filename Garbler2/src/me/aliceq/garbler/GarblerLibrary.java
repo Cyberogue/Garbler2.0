@@ -23,6 +23,12 @@
  */
 package me.aliceq.garbler;
 
+import java.io.BufferedReader;
+import java.io.BufferedWriter;
+import java.io.File;
+import java.io.FileInputStream;
+import java.io.IOException;
+import java.io.InputStreamReader;
 import java.util.HashMap;
 import java.util.Map;
 import java.util.Set;
@@ -92,13 +98,13 @@ public final class GarblerLibrary {
 
     /**
      * Runs a word through all GarblerAnalyzers stored. Note that after this is
-     * run no more analyzers may be added. A value of null causes the library to
-     * use its internally defined delimiter.
+     * run no more analyzers may be added.
      *
      * @param text a series of words to analyze
-     * @param delim regex delimiter to use for separating words
+     * @param delim regex delimiter to use for separating words, or null to use
+     * the internal delim
      */
-    public void analyze(String text, String delim) {
+    public synchronized void analyze(String text, String delim) {
         long millis = System.currentTimeMillis();
         lock = true;
         int count = 0;
@@ -112,6 +118,81 @@ public final class GarblerLibrary {
             analyzed++;
         }
         System.out.println("Parsed " + count + "[" + analyzed + "] words across " + analyzers.size() + " modules in " + (System.currentTimeMillis() - millis) + "ms");
+    }
+
+    /**
+     * Reads in a file line-by-line and analyzes each line.Note that after this
+     * is run no more analyzers may be added. Note that this uses the default
+     * internal delim.
+     *
+     * @param filepath location of the file to read
+     * @return false if there was a problem reading the file
+     */
+    public boolean analyzeFromFile(String filepath) {
+        return analyzeFromFile(new File(filepath), null);
+    }
+
+    /**
+     * Reads in a file line-by-line and analyzes each line.Note that after this
+     * is run no more analyzers may be added.
+     *
+     * @param filepath location of the file to read
+     * @param delim regex to use for separating words, or null to use the
+     * internal delim
+     * @return false if there was a problem reading the file
+     */
+    public boolean analyzeFromFile(String filepath, String delim) {
+        return analyzeFromFile(new File(filepath), delim);
+    }
+
+    /**
+     * Reads in a file line-by-line and analyzes each line.Note that after this
+     * is run no more analyzers may be added. Note that this uses the default
+     * internal delim.
+     *
+     * @param file the file to read
+     * @return false if there was a problem reading the file
+     */
+    public boolean analyzeFromFile(File file) {
+        return analyzeFromFile(file, null);
+    }
+
+    /**
+     * Reads in a file line-by-line and analyzes each line.Note that after this
+     * is run no more analyzers may be added.
+     *
+     * @param file the file to read
+     * @param delim regex to use for separating words, or null to use the
+     * internal delim
+     * @return false if there was a problem reading the file
+     */
+    public synchronized boolean analyzeFromFile(File file, String delim) {
+        try {
+            FileInputStream fis = new FileInputStream(file);
+            BufferedReader reader = new BufferedReader(new InputStreamReader(fis));
+
+            long millis = System.currentTimeMillis();
+            int count = 0;
+            for (String next; (next = reader.readLine()) != null;) {
+                if (!next.isEmpty()) {
+                    String filtered = filter.transpose(next);
+                    String[] words = delim == null ? filtered.split(this.delim) : filtered.split(delim);
+                    for (String word : words) {
+                        for (GarblerAnalyzer analyzer : analyzers.values()) {
+                            analyzer.analyze(word);
+                        }
+                        count++;
+                        analyzed++;
+                    }
+                }
+            }
+
+            System.out.println("Parsed " + count + "[" + analyzed + "] words across " + analyzers.size() + " modules in " + (System.currentTimeMillis() - millis) + "ms");
+
+            lock = true;
+        } catch (Exception e) {
+        }
+        return lock;
     }
 
     /**
