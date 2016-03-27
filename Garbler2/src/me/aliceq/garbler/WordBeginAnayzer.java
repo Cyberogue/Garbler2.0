@@ -21,44 +21,12 @@
  * OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN
  * THE SOFTWARE.
  */
-package me.aliceq.garbler.samples;
-
-import me.aliceq.garbler.GarblerScript;
+package me.aliceq.garbler;
 
 /**
  *
  * @author Alice Quiros <email@aliceq.me>
  */
-public class BasicSampleScript extends GarblerScript {
-
-    @Override
-    public void onStart() {
-        System.out.println("Script start");
-    }
-
-    @Override
-    public void onComplete(String context) {
-        System.out.println("Script complete");
-        System.out.println(context);
-    }
-
-    @Override
-    public void preIterate(String context) {
-        System.out.println("Preiteration");
-        
-        // Get word length from word lengths
-        iterations = 4;
-    }
-
-    @Override
-    public void onIterate(String context) {
-        System.out.println("Iteration");
-
-    }
-
-    @Override
-    public void postIterate(String context) {
-        System.out.println("Postiteration");
-
-    }
+public class WordBeginAnayzer {
+    
 }

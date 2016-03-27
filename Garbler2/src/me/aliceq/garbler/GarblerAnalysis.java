@@ -41,6 +41,8 @@ public abstract class GarblerAnalysis {
         HeatMap<T> cum = filter.applyFilter(new HeatMap<T>(), map);
         System.out.println(cum);
 
+        
+        
         return null;
     }
 }

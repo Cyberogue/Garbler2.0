@@ -27,7 +27,6 @@ import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.Map;
 import me.aliceq.garbler.GarblerAnalyzer;
-import me.aliceq.garbler.GarblerTranslator;
 import me.aliceq.heatmap.HeatMap;
 import me.aliceq.heatmap.HeatMapFilter;
 

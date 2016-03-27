@@ -25,16 +25,12 @@ package me.aliceq.garbler;
 
 /**
  * Abstract class which is run by a GarblerLibrary used to specify how the
- * program is run and how words are created. A GarblerScript uses a Map of
- * String keys and analyzers for communication between methods. This is utilized
- * in a pipeline-like manner, implementing custom hook methods to modify the
- * data at each step.
+ * program is run and how words are created. A GarblerScript relies on a
+ * GarblerLibrary to contain all of its relevant information.
  * <p>
- * A GarblerScript features two GarblerTranslators - one at the input and one at
- * the output. By default these translators are simple pass-through translators
- * unless specified in the constructor. Any input strings will be run through
- * the input translator before analysis, and output word will be run through the
- * output translator after creation.
+ * A GarblerScript features a GarblerTranslator at the output to filter output
+ * messages. By default, there is no filter but if one is desired it can be
+ * specified in the constructor.
  * <p>
  * For creation the script offers three hook methods - preIterate, onIterate and
  * postIterate. preIterate and postIterate are called once per word, before and
@@ -56,34 +52,21 @@ public abstract class GarblerScript {
     public String buffer;
     public int iterations;
 
-    private final GarblerTranslator in, out;
+    private final GarblerTranslator out;
 
     /**
-     * Creates an instance with a case-insensitive input and pass-through output
-     * filters
+     * Creates an instance with no output filtering
      */
     public GarblerScript() {
-        this(GarblerTranslator.caseInsensitive, GarblerTranslator.None);
+        this(GarblerTranslator.None);
     }
 
     /**
-     * Creates an instance with a case-insensitive input and custom output
-     * filters
+     * Creates an instance with a custom output filter
      *
      * @param out output filter
      */
     public GarblerScript(GarblerTranslator out) {
-        this(GarblerTranslator.caseInsensitive, out);
-    }
-
-    /**
-     * Creates an instance with custom input and output filters
-     *
-     * @param in input filter
-     * @param out output filter
-     */
-    public GarblerScript(GarblerTranslator in, GarblerTranslator out) {
-        this.in = in;
         this.out = out;
     }
 
