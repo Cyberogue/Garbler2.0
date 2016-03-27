@@ -47,8 +47,8 @@ public class BasicSample {
         // Create a new script and run it
         GarblerScript script = new BasicSampleScript();
         library.run(script, 8);
-        library.run(script, 8);
-        library.run(script, 6);
-        library.run(script, 3);
+       // library.run(script, 8);
+        //library.run(script, 6);
+        //library.run(script, 3);
     }
 }
