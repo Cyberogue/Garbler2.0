@@ -154,7 +154,7 @@ public class LetterInfluenceAnalyzer implements GarblerAnalyzer<Character> {
             int j = wordPrefix.length() - i - 1;
             HeatMap<Character>[] maps = heatmaps.get(wordPrefix.charAt(j));
             if (maps != null) {
-                fetched[i] = maps.length < i ? null : maps[i];
+                fetched[i] = i >= maps.length ? null : maps[i];
             }
         }
 

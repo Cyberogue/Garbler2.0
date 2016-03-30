@@ -54,22 +54,24 @@ public class BasicSampleScript extends GarblerScript {
         // And find the word length
         HeatMap map = HeatMapAnalysis.trim(next("WordLength", context), 0.05f); // Trim low values
         int length = (Integer) HeatMapAnalysis.randomFromCDF(map);
-        iterations = length - 3;    // Room for an ending
+        iterations = length - 2;    // Room for an ending
     }
 
     @Override
     public void onIterate(String context) {
         // Extract the next letter and add it
-        char next = (Character) HeatMapAnalysis.randomFromCDF(next("Influence", context));
-        buffer += next;
+        Character next = (Character) HeatMapAnalysis.randomFromCDF(next("Influence", context));
+        if (next != null) {
+            buffer += next;
+        }
     }
 
     @Override
     public void postIterate(String context) {
         // See if an ending exists 
         HeatMap map = next("WordEnding", context);
-        if (map != null){
-            buffer += (String)HeatMapAnalysis.randomKey(map);
+        if (map != null) {
+            buffer += (String) HeatMapAnalysis.randomKey(map);
         }
     }
 }

@@ -46,30 +46,24 @@ public class BasicSample {
         library.addAnalyzer("Influence", new LetterInfluenceAnalyzer(4, HeatMapAnalysis.SQRT_HALF));
         library.addAnalyzer("WordLength", new WordLengthCorrelationAnalyzer());
         library.addAnalyzer("FirstChar", new InitialCharDistributionAnalyzer());
-        library.addAnalyzer("WordEnding", new EndingDistributionAnalyzer());
+        library.addAnalyzer("WordEnding", new EndingDistributionAnalyzer(3));
         library.addAnalyzer("LengthCorrelation", new WordLengthCorrelationAnalyzer());
 
         System.out.println(library);
 
         // Analyze from files
-        library.analyzeFromFile("seeds/lorem_japan.txt");
-        //library.analyzeFromFile("seeds/pangram.txt");
-        //library.analyzeFromFile("seeds/kafka.txt");
+        library.analyzeFromFile("seeds/alice.txt");
 
         // Create a new script and run it
         BasicSampleScript script = new BasicSampleScript();
         try {
-          //  script.setOutput(GarblerTranslator.createFromFile("alien.gtf"));
+            // script.setOutput(GarblerTranslator.createFromFile("alien.gtf"));
         } catch (Exception e) {
 
         }
 
-        for (int i = 0; i < 5; i++) {
-            try {
-                library.run(script, 8);
-            } catch (Exception e) {
-
-            }
+        for (int i = 0; i < 10; i++) {
+            library.run(script, 30);
         }
     }
 }
