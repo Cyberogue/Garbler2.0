@@ -44,7 +44,7 @@ import me.aliceq.garbler.analyzer.EndingDistributionAnalyzer;
  */
 public final class GarblerLibrary {
 
-    public static String DEFAULT_DELIM = "[\\s_;:\"0-9]+";
+    public static String DEFAULT_DELIM = "[\\s_;:\"0-9\\[\\]()<>]+";
 
     private boolean selffeed = false;
     private final Map<String, GarblerAnalyzer<Comparable>> analyzers;
