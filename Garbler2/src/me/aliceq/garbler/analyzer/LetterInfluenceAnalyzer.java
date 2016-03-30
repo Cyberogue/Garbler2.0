@@ -23,12 +23,10 @@
  */
 package me.aliceq.garbler.analyzer;
 
-import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.Map;
 import me.aliceq.garbler.GarblerAnalyzer;
 import me.aliceq.heatmap.HeatMap;
-import me.aliceq.heatmap.HeatMapFilter;
 
 /**
  * Analyzer module which maintains information on each character's influence on
@@ -40,9 +38,6 @@ public class LetterInfluenceAnalyzer implements GarblerAnalyzer<Character> {
 
     // The maximum distance a character can have influence
     private final int maxRadius;
-
-    // Filter used to merge results
-    private final HeatMapFilter filter;
 
     // Map of the distance-based heatmaps for each character
     private final Map<Character, HeatMap<Character>[]> heatmaps = new HashMap();
@@ -89,25 +84,7 @@ public class LetterInfluenceAnalyzer implements GarblerAnalyzer<Character> {
         this.maxRadius = maxRadius;
 
         final float i = influence;
-        this.filter = HeatMapFilter.createFrom(new HeatMapFilter.SimpleFilter() {
-            private final float weight = i;
-            private float m;
-
-            @Override
-            public void preprocess() {
-                this.m = 1f;
-            }
-
-            @Override
-            public float process(float currentValue, float sourceValue, Comparable key) {
-                return currentValue + sourceValue * m;
-            }
-
-            @Override
-            public void preprocessSource() {
-                m *= weight;
-            }
-        });
+        // TODO redo merging of values using new heatmap mechanics
     }
 
     /**
@@ -168,32 +145,9 @@ public class LetterInfluenceAnalyzer implements GarblerAnalyzer<Character> {
 
     @Override
     public HeatMap<Character> getProbabilities(String context, String wordPrefix) {
-        // Find the number of letters to count
-        int letterCount = wordPrefix.length() > maxRadius ? maxRadius : wordPrefix.length();
-        int minSize = 10;
+        // TODO reimplement
 
-        // Loop to get all maps
-        ArrayList<HeatMap> sources = new ArrayList();
-        for (int i = 0; i < letterCount; i++) {
-            char c = wordPrefix.charAt(wordPrefix.length() - 1 - i);
-
-            // Check if a heatmap exists
-            HeatMap[] current = heatmaps.get(c);
-            if (current != null && current.length > i) {
-                sources.add(current[i]);
-                if (current[i].size() < minSize) {
-                    minSize = current[i].size();
-                }
-            } else {
-                sources.add(null);
-            }
-        }
-        // Interpolate all the maps
-        HeatMap result = new HeatMap(minSize);
-        filter.applyFilter(result, sources);
-        result.normalizeAll();
-
-        return result;
+        return null;
     }
 
     @Override

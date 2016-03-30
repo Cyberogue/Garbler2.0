@@ -23,9 +23,7 @@
  */
 package me.aliceq.garbler.samples;
 
-import me.aliceq.garbler.GarblerAnalysis;
 import me.aliceq.garbler.GarblerScript;
-import me.aliceq.heatmap.HeatMap;
 
 /**
  *
@@ -47,36 +45,16 @@ public class BasicSampleScript extends GarblerScript {
 
     @Override
     public void preIterate(String context) {
-        // Pick a word length from the current character
-        buffer = "" + (Character) GarblerAnalysis.pickRandom(analyzer("FIRSTCHAR").getProbabilities(context, ""));
-        HeatMap correlation = analyzer("CHARCORRELATION").getProbabilities(context, buffer);
 
-        if (correlation == null) {
-            // Pick the word length at random
-            iterations = (Integer) GarblerAnalysis.pickRandom(analyzer("WORDLENGTH").getProbabilities(context, ""));
-        } else {
-            // Pick the word length from the list of lengths
-            // This is done to prevent 1-letter long words that don't make sense
-            iterations = (Integer) GarblerAnalysis.pickRandom(correlation);
-        }
-
-        iterations -= 2;    // Padding for word endings
     }
 
     @Override
     public void onIterate(String context) {
-        buffer += (Character) GarblerAnalysis.pickRandom(analyzer("LETTERS").getProbabilities(context, buffer));
+        System.out.println(analyzer("LETTERS").getProbabilities(context, "HELLO"));
     }
 
     @Override
     public void postIterate(String context) {
-        // See if there exists an ending
-        HeatMap probabilities = analyzer("ENDINGS").getProbabilities(context, buffer);
-        if (probabilities != null) {
-            String ending = (String) GarblerAnalysis.pickRandom(probabilities);
-            if (ending != null) {
-                buffer += ending;
-            }
-        }
+
     }
 }
