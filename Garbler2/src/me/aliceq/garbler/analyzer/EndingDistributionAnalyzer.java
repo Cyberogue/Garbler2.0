@@ -36,7 +36,7 @@ import me.aliceq.heatmap.HeatMap;
  *
  * @author Alice Quiros <email@aliceq.me>
  */
-public class WordEndingAnalyzer implements GarblerAnalyzer<String> {
+public class EndingDistributionAnalyzer implements GarblerAnalyzer<String> {
 
     private final int minRadius;
     private final int maxRadius;
@@ -45,7 +45,7 @@ public class WordEndingAnalyzer implements GarblerAnalyzer<String> {
     /**
      * Constructor for an analyzer of endings min-2 max-3
      */
-    public WordEndingAnalyzer() {
+    public EndingDistributionAnalyzer() {
         this(3);
     }
 
@@ -54,7 +54,7 @@ public class WordEndingAnalyzer implements GarblerAnalyzer<String> {
      *
      * @param maxRadius the maximum size to consider a word ending
      */
-    public WordEndingAnalyzer(int maxRadius) {
+    public EndingDistributionAnalyzer(int maxRadius) {
         this(2, maxRadius);
     }
 
@@ -64,7 +64,7 @@ public class WordEndingAnalyzer implements GarblerAnalyzer<String> {
      * @param minRadius the minimum size to consider a word ending
      * @param maxRadius the maximum size to consider a word ending
      */
-    public WordEndingAnalyzer(int minRadius, int maxRadius) {
+    public EndingDistributionAnalyzer(int minRadius, int maxRadius) {
         this.maxRadius = maxRadius + 1; // Additional slot needed to get associative letter
         this.minRadius = minRadius;
         this.endings = new HashMap();
@@ -170,7 +170,7 @@ public class WordEndingAnalyzer implements GarblerAnalyzer<String> {
     }
 
     @Override
-    public HeatMap<String> getProbabilities(String context, String wordPrefix) {
+    public HeatMap<String> next(String context, String wordPrefix) {
         if (wordPrefix.length() < 1) {
             return null;
         }

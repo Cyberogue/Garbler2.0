@@ -23,51 +23,32 @@
  */
 package me.aliceq.garbler.analyzer;
 
-import java.util.HashMap;
-import java.util.Map;
 import me.aliceq.garbler.GarblerAnalyzer;
 import me.aliceq.heatmap.HeatMap;
 
 /**
- * Analyzer which keeps track of the correlation between the first letter in a
- * word and its length
+ * Simple analyzer which keeps track of how common each word length is.
  *
  * @author Alice Quiros <email@aliceq.me>
  */
-public class CharLengthCorrelationAnalyzer implements GarblerAnalyzer<Integer> {
+public class WordLengthDistributionAnalyzer implements GarblerAnalyzer<Integer> {
 
-    private Map<Character, HeatMap<Integer>> map = new HashMap();
+    private final HeatMap<Integer> map = new HeatMap();
 
     @Override
     public void analyze(String word) {
-        if (word.length() < 0) {
-            return;
+        if (word.length() >= 1) {
+            map.increment(word.length());
         }
-
-        char first = word.charAt(0);
-        int length = word.length();
-
-        HeatMap<Integer> heatmap = map.get(first);
-        if (heatmap == null) {
-            heatmap = new HeatMap();
-            map.put(first, heatmap);
-        }
-        heatmap.increment(length);
     }
 
     @Override
-    public HeatMap<Integer> getProbabilities(String context, String wordPrefix) {
-        if (wordPrefix.length() < 1) {
-            return null;
-        }
-        char c = wordPrefix.charAt(0);
-        HeatMap<Integer> heatmap = map.get(c);
-        return heatmap;
+    public HeatMap<Integer> next(String context, String wordPrefix) {
+        return map;
     }
 
     @Override
     public void clear() {
-        map.clear();
+        map.Clear();
     }
-
 }

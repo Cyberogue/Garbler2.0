@@ -23,6 +23,8 @@
  */
 package me.aliceq.garbler;
 
+import me.aliceq.heatmap.HeatMap;
+
 /**
  * Abstract class which is run by a GarblerLibrary used to specify how the
  * program is run and how words are created. A GarblerScript relies on a
@@ -138,11 +140,26 @@ public abstract class GarblerScript {
      * @throws IllegalArgumentException if an invalid (non-existent) key is
      * provided
      */
-    public final GarblerAnalyzer<Comparable> analyzer(final String key) {
-        GarblerAnalyzer<Comparable> a = library.getAnalyzer(key);
+    public final GarblerAnalyzer<? extends Comparable> analyzer(final String key) {
+        GarblerAnalyzer<? extends Comparable> a = library.getAnalyzer(key);
         if (a == null) {
             throw new IllegalArgumentException("Invalid analyzer key");
         }
         return a;
+    }
+
+    /**
+     * Retrieves the next set of data from a stored analyzer using hte current
+     * buffer data. This is identical to calling analyzer(key).next(context,
+     * buffer).
+     *
+     * @param key the key the analyzer is under
+     * @param context context to pass to the analyzer, if any
+     * @return a HeatMap of data from the desired analyzer
+     * @throws IllegalArgumentException if an invalid (non-existent) key is
+     * provided
+     */
+    public final HeatMap<? extends Comparable> next(final String key, String context) {
+        return analyzer(key).next(context, buffer);
     }
 }

@@ -27,23 +27,26 @@ import me.aliceq.garbler.GarblerAnalyzer;
 import me.aliceq.heatmap.HeatMap;
 
 /**
- * Simple analyzer which keeps track of word lengths
+ * Analyzer which simply keeps track of how often different letters are used as
+ * the first letter in a word
  *
  * @author Alice Quiros <email@aliceq.me>
  */
-public class SimpleWordLengthAnalyzer implements GarblerAnalyzer<Integer> {
+public class InitialCharDistributionAnalyzer implements GarblerAnalyzer<Character> {
 
-    private final HeatMap<Integer> map = new HeatMap();
+    private final HeatMap<Character> map = new HeatMap();
 
     @Override
     public void analyze(String word) {
-        if (word.length() >= 1) {
-            map.increment(word.length());
+        if (word.isEmpty()) {
+            return;
         }
+
+        map.increment(word.charAt(0));
     }
 
     @Override
-    public HeatMap<Integer> getProbabilities(String context, String wordPrefix) {
+    public HeatMap<Character> next(String context, String wordPrefix) {
         return map;
     }
 

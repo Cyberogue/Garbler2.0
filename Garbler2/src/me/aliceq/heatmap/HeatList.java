@@ -94,7 +94,7 @@ public class HeatList {
      * @param index the index to retrieve
      * @return a floating point value
      */
-    public float getValue(int index) {
+    public float get(int index) {
         if (index < 0 || index >= size) {
             throw new ArrayIndexOutOfBoundsException();
         }
@@ -260,6 +260,18 @@ public class HeatList {
     }
 
     /**
+     * Sets the value at a given index. Note that this marks the HeatList as
+     * denormalized.
+     *
+     * @param index index to set
+     * @param value new value to place into the index
+     */
+    protected void set(int index, float value) {
+        this.values[index] = value;
+        this.normalized = false;
+    }
+
+    /**
      * Increments a given index by 1
      *
      * @param index the index to increment
@@ -414,7 +426,7 @@ public class HeatList {
      * @param index The index to delete
      * @return The removed value
      */
-    public float deleteIndexUnsafe(int index) {
+    public float discardIndex(int index) {
         if (index < 0 || index >= size) {
             throw new ArrayIndexOutOfBoundsException();
         }

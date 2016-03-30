@@ -23,32 +23,36 @@
  */
 package me.aliceq.heatmap;
 
+import java.util.Arrays;
 import java.util.Collection;
-import java.util.ConcurrentModificationException;
+import java.util.HashSet;
 import java.util.Iterator;
 import java.util.Map;
 import java.util.Set;
 
 /**
- * A read-only window until a HeatMap's data set. This class lists the
- * value-pair associations in a sorted, easily iterable order.
+ * A read-only window into a HeatMap's data set. This class lists the value-pair
+ * associations in a sorted, easily iterable order. This instance contains a
+ * copy of the HeatMap data so if the original is altered, this instance is not
+ * changed.
  *
  * @author Alice Quiros <email@aliceq.me>
  * @param <E> Comparable key type
  */
 public class HeatMapDataSet<E extends Comparable> implements Set<Map.Entry<E, Float>> {
 
-    private final int modcount;
-    private final HeatMap<E> parent;
+    private final Map.Entry<E, Float>[] entries;
 
     /**
      * Creates a data set based on a parnet heatmap
      *
-     * @param parent
+     * @param from the HeatMap to create a data view from
      */
-    public HeatMapDataSet(HeatMap<E> parent) {
-        modcount = parent.modcount;
-        this.parent = parent;
+    protected HeatMapDataSet(HeatMap<E> from) {
+        this.entries = new Map.Entry[from.size()];
+        for (int i = 0; i < entries.length; i++) {
+            entries[i] = from.getEntry(i);
+        }
     }
 
     /**
@@ -58,10 +62,7 @@ public class HeatMapDataSet<E extends Comparable> implements Set<Map.Entry<E, Fl
      * @return a new Map.Entry<E, Float> instance
      */
     public Map.Entry get(int index) {
-        if (modcount != parent.modcount) {
-            throw new ConcurrentModificationException("Parent map was modified");
-        }
-        return parent.getEntry(index);
+        return entries[index];
     }
 
     /**
@@ -71,10 +72,7 @@ public class HeatMapDataSet<E extends Comparable> implements Set<Map.Entry<E, Fl
      * @return the key at the given index
      */
     public E getKey(int index) {
-        if (modcount != parent.modcount) {
-            throw new ConcurrentModificationException("Parent map was modified");
-        }
-        return parent.getKey(index);
+        return entries[index].getKey();
     }
 
     /**
@@ -84,10 +82,17 @@ public class HeatMapDataSet<E extends Comparable> implements Set<Map.Entry<E, Fl
      * @return the value at the given index
      */
     public float getValue(int index) {
-        if (modcount != parent.modcount) {
-            throw new ConcurrentModificationException("Parent map was modified");
-        }
-        return parent.getValue(index);
+        return entries[index].getValue();
+    }
+
+    /**
+     * Gets the key-value pairing at the given index
+     *
+     * @param index index to retrieve
+     * @return the key-value pairing at the given index
+     */
+    public Map.Entry<E, Float> getEntry(int index) {
+        return entries[index];
     }
 
     /**
@@ -97,29 +102,81 @@ public class HeatMapDataSet<E extends Comparable> implements Set<Map.Entry<E, Fl
      * @return the index of the key or -1
      */
     public int indexOf(E key) {
-        int index = parent.keyToIndex(key);
-        if (key.equals(parent.getKey(index))) {
-            return index;
+        int position = positionOf(key);
+        if (entries[position].getKey().equals(key)) {
+            return position;
         } else {
             return -1;
         }
     }
 
+    /**
+     * Returns the position of a key, meaning where in the list it should exist.
+     * If the key exists this is the index of the key. If not, this is where the
+     * key would be inserted.
+     *
+     * @param key the key to check
+     * @return the insertion point of the key
+     */
+    public int positionOf(E key) {
+        int low = 0, high = entries.length;
+        while (high != low) {
+            int mid = (low + high) / 2;
+            // Extract the middle element of the two
+            Map.Entry<E, Float> element = entries[mid];
+            // Compare to key
+            if (element.getKey().compareTo(key) < 0) {
+                // Increase low pointer
+                low = mid + 1;
+            } else {
+                // Decrease high pointer
+                high = mid;
+            }
+        }
+        return low;
+    }
+
+    /**
+     * Returns an array of all the keys in the HeatMap. Each key will only exist
+     * once in the array.
+     *
+     * @return
+     */
+    public Set<E> keySet() {
+        E[] keys = (E[]) new Comparable[entries.length];
+        for (int i = 0; i < keys.length; i++) {
+            keys[i] = entries[i].getKey();
+        }
+        return new HashSet(Arrays.asList(keys));
+    }
+
+    /**
+     * Gets the total sum of all elements in the set
+     *
+     * @return the total cumulative sum
+     */
+    public float getTotal() {
+        float sum = 0f;
+        for (Map.Entry<E, Float> entry : entries) {
+            sum += entry.getValue();
+        }
+        return sum;
+    }
+
     @Override
     public int size() {
-        return parent.size();
+        return entries.length;
     }
 
     @Override
     public boolean isEmpty() {
-        return parent.isEmpty();
+        return entries.length == 0;
     }
 
     @Override
     public boolean contains(Object o) {
         if (o instanceof Comparable) {
-            int index = parent.keyToIndex((E) o);
-            return parent.verifyKey(index, (E) o);
+            return indexOf((E) o) >= 0;
         }
         return false;
     }
@@ -136,36 +193,58 @@ public class HeatMapDataSet<E extends Comparable> implements Set<Map.Entry<E, Fl
 
     @Override
     public Iterator<Map.Entry<E, Float>> iterator() {
-        return new HeatMapDataSetIterator();
+        return new HeatMapDataViewIterator();
     }
 
     @Override
     public Object[] toArray() {
-        Map.Entry[] entries = new Map.Entry[parent.size()];
+        Map.Entry[] copy = new Map.Entry[entries.length];
+        System.arraycopy(entries, 0, copy, 0, copy.length);
 
-        for (int i = 0; i < entries.length; i++) {
-            entries[i] = parent.getEntry(i);
-        }
-        return entries;
+        return copy;
     }
 
     @Override
     public String toString() {
-        return parent.toString() + '*';
+        if (entries.length == 0) {
+            return "[]";
+        }
+        String s = "[" + entries[0];
+        for (int i = 1; i < entries.length; i++) {
+            s += ", " + entries[i].getKey() + "=" + (float) entries[i].getValue();
+        }
+        return s + "]";
     }
 
-    public class HeatMapDataSetIterator implements Iterator<Map.Entry<E, Float>> {
+    @Override
+    public <T> T[] toArray(T[] a) {
+        Object[] array;
+        if (a.length > entries.length) {
+            array = a;
+            for (int i = entries.length; i < a.length; i++) {
+                a[i] = null;
+            }
+        } else {
+            array = new Object[entries.length];
+        }
+
+        System.arraycopy(entries, 0, array, 0, entries.length);
+
+        return (T[]) array;
+    }
+
+    private class HeatMapDataViewIterator implements Iterator<Map.Entry<E, Float>> {
 
         private int index = 0;
 
         @Override
         public boolean hasNext() {
-            return index < parent.size();
+            return index < entries.length;
         }
 
         @Override
         public Map.Entry<E, Float> next() {
-            return parent.getEntry(index++);
+            return entries[index++];
         }
 
         @Override
@@ -173,11 +252,6 @@ public class HeatMapDataSet<E extends Comparable> implements Set<Map.Entry<E, Fl
         public void remove() {
             throw new UnsupportedOperationException("Object is read-only");
         }
-    }
-
-    @Override
-    public <T> T[] toArray(T[] a) {
-        throw new UnsupportedOperationException("Use Object[] toArray() method instead");
     }
 
     @Override

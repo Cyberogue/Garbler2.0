@@ -27,6 +27,8 @@ import java.util.HashMap;
 import java.util.Map;
 import me.aliceq.garbler.GarblerAnalyzer;
 import me.aliceq.heatmap.HeatMap;
+import me.aliceq.heatmap.HeatMapAnalysis;
+import me.aliceq.heatmap.HeatMapDataSet;
 
 /**
  * Analyzer module which maintains information on each character's influence on
@@ -37,54 +39,53 @@ import me.aliceq.heatmap.HeatMap;
 public class LetterInfluenceAnalyzer implements GarblerAnalyzer<Character> {
 
     // The maximum distance a character can have influence
-    private final int maxRadius;
+    private final int radius;
+    private final float weight;
 
     // Map of the distance-based heatmaps for each character
     private final Map<Character, HeatMap<Character>[]> heatmaps = new HashMap();
 
     /**
-     * Creates an analyzer of radius 3
+     * Creates an analyzer of radius 3 and weight of sqrt(2)
      */
     public LetterInfluenceAnalyzer() {
-        this(1);
+        this(3, HeatMapAnalysis.SQRT_HALF);
     }
 
     /**
-     * Creates a letter influence analyzer of influence 0.5
+     * Creates a letter influence analyzer of weight of sqrt(2)
      *
-     * @param maxRadius the maximum distance a character can have influence. The
+     * @param radius the maximum distance a character can have influence. The
      * higher the influence radius the more memory is used.
      */
-    public LetterInfluenceAnalyzer(int maxRadius) {
-        this(maxRadius, 0.4f);
+    public LetterInfluenceAnalyzer(int radius) {
+        this(radius, HeatMapAnalysis.SQRT_HALF);
     }
 
     /**
      * Creates a letter influence analyzer of radius 3
      *
-     * @param influence the value to interpolate between successive HeatMaps.
-     * This should be a value between 0 and 1
+     * @param weight the k_n value to apply to the power series calculation when
+     * retrieving data
      */
-    public LetterInfluenceAnalyzer(float influence) {
-        this(3, influence);
+    public LetterInfluenceAnalyzer(float weight) {
+        this(3, weight);
     }
 
     /**
      * Creates a letter influence analyzer
      *
-     * @param maxRadius the maximum distance a character can have influence. The
+     * @param radius the maximum distance a character can have influence. The
      * higher the influence radius the more memory is used.
-     * @param influence the value to interpolate between successive HeatMaps.
-     * This should be a value between 0 and 1
+     * @param weight the k_n value to apply to the power series calculation when
+     * retrieving data
      */
-    public LetterInfluenceAnalyzer(int maxRadius, float influence) {
-        if (maxRadius <= 0) {
+    public LetterInfluenceAnalyzer(int radius, float weight) {
+        if (radius <= 0) {
             throw new IllegalArgumentException("Radius must be greater than 0");
         }
-        this.maxRadius = maxRadius;
-
-        final float i = influence;
-        // TODO redo merging of values using new heatmap mechanics
+        this.radius = radius;
+        this.weight = weight;
     }
 
     /**
@@ -93,7 +94,7 @@ public class LetterInfluenceAnalyzer implements GarblerAnalyzer<Character> {
      * @return the maximum radius of influence
      */
     public int getMaxRadius() {
-        return maxRadius;
+        return radius;
     }
 
     @Override
@@ -107,8 +108,8 @@ public class LetterInfluenceAnalyzer implements GarblerAnalyzer<Character> {
         for (int i = 0; i < word.length() - 1; i++) {
             // Find the number of letters to count
             int letterCount = word.length() - i - 1;
-            if (letterCount > maxRadius) {
-                letterCount = maxRadius;
+            if (letterCount > radius) {
+                letterCount = radius;
             }
 
             // Fetch current entry
@@ -144,10 +145,20 @@ public class LetterInfluenceAnalyzer implements GarblerAnalyzer<Character> {
     }
 
     @Override
-    public HeatMap<Character> getProbabilities(String context, String wordPrefix) {
+    public HeatMap<Character> next(String context, String wordPrefix) {
         // TODO reimplement
+        int length = wordPrefix.length() < radius ? wordPrefix.length() : radius;
 
-        return null;
+        HeatMap<Character>[] fetched = new HeatMap[length];
+        for (int i = 0; i < length; i++) {
+            int j = wordPrefix.length() - i - 1;
+            HeatMap<Character>[] maps = heatmaps.get(wordPrefix.charAt(j));
+            fetched[i] = maps.length < i ? null : maps[i];
+        }
+
+        HeatMap<Character> series = HeatMapAnalysis.powerSeries(fetched, weight);
+
+        return series;
     }
 
     @Override

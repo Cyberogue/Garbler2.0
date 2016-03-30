@@ -23,7 +23,10 @@
  */
 package me.aliceq.garbler.samples;
 
+import java.util.Map;
 import me.aliceq.garbler.GarblerScript;
+import me.aliceq.heatmap.HeatMap;
+import me.aliceq.heatmap.HeatMapAnalysis;
 
 /**
  *
@@ -45,16 +48,29 @@ public class BasicSampleScript extends GarblerScript {
 
     @Override
     public void preIterate(String context) {
+        // Extract the initial character
+        char seed = (Character) HeatMapAnalysis.randomFromCDF(next("FirstChar", context));
+        buffer += seed;
 
+        // And find the word length
+        HeatMap map = HeatMapAnalysis.trim(next("WordLength", context), 0.05f); // Trim low values
+        int length = (Integer) HeatMapAnalysis.randomFromCDF(map);
+        iterations = length - 3;    // Room for an ending
     }
 
     @Override
     public void onIterate(String context) {
-        System.out.println(analyzer("LETTERS").getProbabilities(context, "HELLO"));
+        // Extract the next letter and add it
+        char next = (Character) HeatMapAnalysis.randomFromCDF(next("Influence", context));
+        buffer += next;
     }
 
     @Override
     public void postIterate(String context) {
-
+        // See if an ending exists 
+        HeatMap map = next("WordEnding", context);
+        if (map != null){
+            buffer += (String)HeatMapAnalysis.randomKey(map);
+        }
     }
 }

@@ -88,7 +88,7 @@ public class ReadOnlyHeatList extends HeatList {
 
     @Deprecated
     @Override
-    public float deleteIndexUnsafe(int index) {
+    public float discardIndex(int index) {
         throw new UnsupportedOperationException("Instance is read-only");
     }
 

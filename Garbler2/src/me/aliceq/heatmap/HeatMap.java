@@ -26,23 +26,22 @@ package me.aliceq.heatmap;
 import java.text.DecimalFormat;
 import java.util.AbstractMap;
 import java.util.ArrayList;
-import java.util.Collection;
+import java.util.Arrays;
 import java.util.Collections;
 import java.util.HashMap;
+import java.util.HashSet;
 import java.util.List;
 import java.util.Map;
+import java.util.Set;
 
 /**
  * An extension of a Heatlist which provides key-based access using a sorted
- * list. Accesses are performed in O(logn). This offers a fail-fast safety
- * method when retrieving and viewing data.
+ * list. Accesses are performed in O(logn).
  *
  * @author Alice Quiros <email@aliceq.me>
  * @param <K> Comparable key type
  */
 public class HeatMap<K extends Comparable> {
-
-    protected int modcount = 0;
 
     private HeatList values;
     private List<K> keys;
@@ -96,7 +95,6 @@ public class HeatMap<K extends Comparable> {
      * sum equal 1
      */
     public void normalizeAll() {
-        modcount++;
         values.normalize();
     }
 
@@ -110,13 +108,22 @@ public class HeatMap<K extends Comparable> {
     }
 
     /**
+     * Returns a set of all the keys in the HeatMap
+     *
+     * @return a new Set of keys
+     */
+    public K[] keys() {
+        return (K[]) keys.toArray(new Comparable[keys.size()]);
+    }
+
+    /**
      * Verifies that a key exists and if not, it creates it
      *
      * @param key the key to add
      * @return true if a new key was made or false if the key already exists
      */
     public boolean touch(K key) {
-        return touch(key, keyToIndex(key));
+        return touch(key, positionOf(key));
     }
 
     /**
@@ -127,29 +134,28 @@ public class HeatMap<K extends Comparable> {
      * @return true if successful or false if the key doesn't exist
      */
     public synchronized boolean removeKey(K key) {
-        int index = keyToIndex(key);
+        int index = positionOf(key);
         if (keys.get(index) == key) {
             keys.remove(index);
             values.deleteIndex(index);
-            modcount++;
             return true;
         }
         return false;
     }
 
     /**
-     * Delete a key and its corresponding value from the map. Note that this
-     * method is unsafe and risks de-normalizing the HeatMap.
+     * Delete a key and its corresponding value from the map. Unlike removeKey,
+     * this method simply removes the data at the risk of denormalizing a
+     * normalized HeatMap.
      *
      * @param key the key to remove
      * @return true if successful or false if the key doesn't exist
      */
-    public synchronized boolean removeKeyUnsafe(K key) {
-        int index = keyToIndex(key);
+    public synchronized boolean discardKey(K key) {
+        int index = positionOf(key);
         if (keys.get(index) == key) {
             keys.remove(index);
-            values.deleteIndexUnsafe(index);
-            modcount++;
+            values.discardIndex(index);
             return true;
         }
         return false;
@@ -162,56 +168,26 @@ public class HeatMap<K extends Comparable> {
      * @return true if the key exists
      */
     public boolean contains(K key) {
-        int index = keyToIndex(key);
+        int index = positionOf(key);
         return keys.get(index) == key;
     }
 
     /**
      * Retrieves the value at a certain key. If the key doesn't exist a value of
-     * 0 is returned;
+     * 0 is returned.
      *
      * @param key the key to retrieve
      * @return the value at the given key or 0
      */
     public float getValue(K key) {
-        int index = keyToIndex(key);
-        if (keys.get(index) == key) {
-            return values.getValue(index);
+        int index = positionOf(key);
+        if (index >= keys.size()) {
+            return 0;
+        } else if (keys.get(index) == key) {
+            return values.get(index);
         } else {
             return 0;
         }
-    }
-
-    /**
-     * Returns the float value at the given index
-     *
-     * @param index the index to retrieve
-     * @return the float value at the given index
-     */
-    protected float getValue(int index) {
-        rangeCheck(index);
-        return values.getValue(index);
-    }
-
-    /**
-     * Retrieves a key at a specified index
-     *
-     * @param index the index
-     * @return the key at the specified index
-     */
-    protected K getKey(int index) {
-        return keys.get(index);
-    }
-
-    /**
-     * Returns a new Map.Entry containing the data at the given index
-     *
-     * @param index the index
-     * @return a new Map.Entry instance
-     */
-    protected Map.Entry<K, Float> getEntry(int index) {
-        rangeCheck(index);
-        return new AbstractMap.SimpleImmutableEntry<>(keys.get(index), values.getValue(index));
     }
 
     /**
@@ -220,7 +196,26 @@ public class HeatMap<K extends Comparable> {
     public synchronized void Clear() {
         keys.clear();
         values.clear();
-        modcount++;
+    }
+
+    /**
+     * Overwrites the value at a given key. If the key doesn't exist, a new key
+     * is made. Note that this flags a HeatMap as denormalized.
+     *
+     * @param key the key to set
+     * @param value the value to set
+     */
+    public synchronized void set(K key, float value) {
+        int index = positionOf(key);
+
+        if (index < keys.size() && keys.get(index) == key) {
+            values.set(index, value);
+        } else {
+            // Add a new key and increment it
+            keys.add(index, key);
+            values.addNewIndex(index);
+            values.set(index, value);
+        }
     }
 
     /**
@@ -243,8 +238,8 @@ public class HeatMap<K extends Comparable> {
      * @return the new value at the given key
      */
     public synchronized float increment(K key, int amount) {
-        int index = keyToIndex(key);
-        modcount++;
+        int index = positionOf(key);
+
         if (index < keys.size() && keys.get(index) == key) {
             return values.increment(index, amount);
         } else {
@@ -275,8 +270,8 @@ public class HeatMap<K extends Comparable> {
      * @return the new value at the given key or 0
      */
     public synchronized float incrementIfExists(K key, int amount) {
-        int index = keyToIndex(key);
-        modcount++;
+        int index = positionOf(key);
+
         if (index < keys.size() && keys.get(index) == key) {
             return values.increment(index, amount);
         }
@@ -301,15 +296,15 @@ public class HeatMap<K extends Comparable> {
     public Map<K, Float> toMap() {
         Map<K, Float> map = new HashMap();
         for (int i = 0; i < keys.size(); i++) {
-            map.put(keys.get(i), values.getValue(i));
+            map.put(keys.get(i), values.get(i));
         }
         return Collections.unmodifiableMap(map);
     }
 
     /**
      * Verifies that a key exists and if not, it creates it. This method should
-     * only be used with an external call to keyToIndex in order to minimize
-     * keyToIndex calls. Using any other index may cause errors or put the map
+     * only be used with an external call to positionOf in order to minimize
+     * positionOf calls. Using any other index may cause errors or put the map
      * in an illegal state.
      *
      * @param key the key to add
@@ -321,10 +316,36 @@ public class HeatMap<K extends Comparable> {
         if (checkValidity(index, key)) {
             values.addNewIndex(index);
             keys.add(index, key);
-            modcount++;
+
             return true;
         }
         return false;
+    }
+
+    /**
+     * Retrieves the value at the given key as a Map.Entry
+     *
+     * @param key the key to retrieve
+     * @return a new Map.Entry<K, Float>
+     */
+    public Map.Entry<K, Float> getEntry(K key) {
+        int position = positionOf(key);
+        if (keys.get(position).equals(key)) {
+            return getEntry(position);
+        } else {
+            return null;
+        }
+    }
+
+    /**
+     * Retrieves the value at the given index as a Map.Entry
+     *
+     * @param index the index to retrieve
+     * @return a new Map.Entry<K, Float>
+     */
+    protected Map.Entry<K, Float> getEntry(int index) {
+        rangeCheck(index);
+        return new AbstractMap.SimpleImmutableEntry(keys.get(index), values.get(index));
     }
 
     /**
@@ -333,7 +354,7 @@ public class HeatMap<K extends Comparable> {
      * @param key the key to check
      * @return the index to place the key into
      */
-    protected synchronized int keyToIndex(K key) {
+    protected synchronized int positionOf(K key) {
         int low = 0, high = keys.size();
         while (high != low) {
             int mid = (low + high) / 2;
@@ -426,9 +447,9 @@ public class HeatMap<K extends Comparable> {
             return values.normalized() ? "{}" : "<>";
         }
 
-        String s = (values.normalized() ? "{" : "<") + keys.get(0) + "=" + values.getValue(0);
+        String s = (values.normalized() ? "{" : "<") + keys.get(0) + "=" + values.get(0);
         for (int i = 1; i < keys.size(); i++) {
-            s += ", " + format.format(keys.get(i)) + "=" + format.format(values.getValue(i));
+            s += ", " + format.format(keys.get(i)) + "=" + format.format(values.get(i));
         }
         s += (values.normalized() ? "}" : ">");
         return s;
@@ -440,9 +461,9 @@ public class HeatMap<K extends Comparable> {
             return values.normalized() ? "{}" : "<>";
         }
 
-        String s = (values.normalized() ? "{" : "<") + keys.get(0) + "=" + values.getValue(0);
+        String s = (values.normalized() ? "{" : "<") + keys.get(0) + "=" + values.get(0);
         for (int i = 1; i < keys.size(); i++) {
-            s += ", " + keys.get(i) + "=" + values.getValue(i);
+            s += ", " + keys.get(i) + "=" + values.get(i);
         }
         s += (values.normalized() ? "}" : ">");
         return s;

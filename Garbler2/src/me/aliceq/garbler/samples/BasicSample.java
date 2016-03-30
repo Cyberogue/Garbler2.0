@@ -25,6 +25,11 @@ package me.aliceq.garbler.samples;
 
 import me.aliceq.garbler.GarblerLibrary;
 import me.aliceq.garbler.GarblerScript;
+import me.aliceq.garbler.analyzer.WordLengthCorrelationAnalyzer;
+import me.aliceq.garbler.analyzer.LetterInfluenceAnalyzer;
+import me.aliceq.garbler.analyzer.WordLengthDistributionAnalyzer;
+import me.aliceq.garbler.analyzer.InitialCharDistributionAnalyzer;
+import me.aliceq.garbler.analyzer.EndingDistributionAnalyzer;
 
 /**
  *
@@ -33,16 +38,20 @@ import me.aliceq.garbler.GarblerScript;
 public class BasicSample {
 
     public static void main(String[] args) {
-        // Create a new library
+        // Create a new library and load it
         GarblerLibrary library = new GarblerLibrary();
 
-        // Load the default analyzers
-        library.loadDefaults(2, 0.75f);
+        library.addAnalyzer("Influence", new LetterInfluenceAnalyzer());
+        library.addAnalyzer("WordLength", new WordLengthCorrelationAnalyzer());
+        library.addAnalyzer("FirstChar", new InitialCharDistributionAnalyzer());
+        library.addAnalyzer("WordEnding", new EndingDistributionAnalyzer());
+        library.addAnalyzer("LengthCorrelation", new WordLengthCorrelationAnalyzer());
+
         System.out.println(library);
 
-        // Analyze lorem ipsum
-        library.analyzeFromFile("seeds/kafka.txt");
+        // Analyze from files
         library.analyzeFromFile("seeds/loremipsum.txt");
+        //  library.analyzeFromFile("seeds/kafka.txt");
 
         // Create a new script and run it
         for (int i = 0; i < 4; i++) {

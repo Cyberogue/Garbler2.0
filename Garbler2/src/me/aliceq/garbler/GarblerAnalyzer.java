@@ -49,7 +49,7 @@ public interface GarblerAnalyzer<E extends Comparable> {
      * @return a normalized HeatMap of String probabilities for the current
      * analyzer
      */
-    public HeatMap<E> getProbabilities(String context, String wordPrefix);
+    public HeatMap<E> next(String context, String wordPrefix);
 
     /**
      * Clears all data within the analyzer. This should be equivalent to making a

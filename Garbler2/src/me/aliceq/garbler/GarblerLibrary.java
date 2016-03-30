@@ -32,11 +32,11 @@ import java.io.InputStreamReader;
 import java.util.HashMap;
 import java.util.Map;
 import java.util.Set;
-import me.aliceq.garbler.analyzer.CharLengthCorrelationAnalyzer;
+import me.aliceq.garbler.analyzer.WordLengthCorrelationAnalyzer;
 import me.aliceq.garbler.analyzer.LetterInfluenceAnalyzer;
-import me.aliceq.garbler.analyzer.SimpleWordLengthAnalyzer;
-import me.aliceq.garbler.analyzer.WordBeginAnalyzer;
-import me.aliceq.garbler.analyzer.WordEndingAnalyzer;
+import me.aliceq.garbler.analyzer.WordLengthDistributionAnalyzer;
+import me.aliceq.garbler.analyzer.InitialCharDistributionAnalyzer;
+import me.aliceq.garbler.analyzer.EndingDistributionAnalyzer;
 
 /**
  * Class containing analyzers for a Garbler program. In addition, a library
@@ -306,18 +306,18 @@ public final class GarblerLibrary {
      * given keys:<br>
      * <p>
      * LETTERS : LetterInfluenceAnalyzer<br>
-     * WORDLENGTH : SimpleWordLengthAnalyzer<br>
-     * FIRSTCHAR : WordBeginAnalyzer<br>
+ WORDLENGTH : WordLengthDistributionAnalyzer<br>
+ FIRSTCHAR : InitialCharDistributionAnalyzer<br>
      * ENDINGS : WordEndAnalyzer<br>
-     * CHARCORRELATION : CharLengthCorrelationAnalyzer<BR>
+ CHARCORRELATION : WordLengthCorrelationAnalyzer<BR>
      *
      */
     public void loadDefaults() {
         addAnalyzer("LETTERS", new LetterInfluenceAnalyzer());
-        addAnalyzer("WORDLENGTH", new SimpleWordLengthAnalyzer());
-        addAnalyzer("FIRSTCHAR", new WordBeginAnalyzer());
-        addAnalyzer("ENDINGS", new WordEndingAnalyzer());
-        addAnalyzer("CHARCORRELATION", new CharLengthCorrelationAnalyzer());
+        addAnalyzer("WORDLENGTH", new WordLengthDistributionAnalyzer());
+        addAnalyzer("FIRSTCHAR", new InitialCharDistributionAnalyzer());
+        addAnalyzer("ENDINGS", new EndingDistributionAnalyzer());
+        addAnalyzer("CHARCORRELATION", new WordLengthCorrelationAnalyzer());
     }
 
     /**
@@ -325,10 +325,10 @@ public final class GarblerLibrary {
      * given keys:<br>
      * <p>
      * LETTERS : LetterInfluenceAnalyzer<br>
-     * WORDLENGTH : SimpleWordLengthAnalyzer<br>
-     * FIRSTCHAR : WordBeginAnalyzer<br>
+ WORDLENGTH : WordLengthDistributionAnalyzer<br>
+ FIRSTCHAR : InitialCharDistributionAnalyzer<br>
      * ENDINGS : WordEndAnalyzer<br>
-     * CHARCORRELATION : CharLengthCorrelationAnalyzer<BR>
+ CHARCORRELATION : WordLengthCorrelationAnalyzer<BR>
      *
      * @param radius radius of influence
      * @param letterInfluence letter influence factor
@@ -339,10 +339,10 @@ public final class GarblerLibrary {
             throw new IllegalArgumentException("Radius has to be greater than 1");
         }
         addAnalyzer("LETTERS", new LetterInfluenceAnalyzer(radius, letterInfluence));
-        addAnalyzer("WORDLENGTH", new SimpleWordLengthAnalyzer());
-        addAnalyzer("FIRSTCHAR", new WordBeginAnalyzer());
-        addAnalyzer("ENDINGS", new WordEndingAnalyzer(radius));
-        addAnalyzer("CHARCORRELATION", new CharLengthCorrelationAnalyzer());
+        addAnalyzer("WORDLENGTH", new WordLengthDistributionAnalyzer());
+        addAnalyzer("FIRSTCHAR", new InitialCharDistributionAnalyzer());
+        addAnalyzer("ENDINGS", new EndingDistributionAnalyzer(radius));
+        addAnalyzer("CHARCORRELATION", new WordLengthCorrelationAnalyzer());
     }
 
     /**
