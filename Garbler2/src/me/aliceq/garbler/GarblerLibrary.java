@@ -24,10 +24,8 @@
 package me.aliceq.garbler;
 
 import java.io.BufferedReader;
-import java.io.BufferedWriter;
 import java.io.File;
 import java.io.FileInputStream;
-import java.io.IOException;
 import java.io.InputStreamReader;
 import java.util.HashMap;
 import java.util.Map;
@@ -46,6 +44,8 @@ import me.aliceq.garbler.analyzer.EndingDistributionAnalyzer;
  */
 public final class GarblerLibrary {
 
+    public static final String DEFAULT_DELIM = "[\\s_.?!]+";
+
     private final String delim;
     private boolean selffeed = false;
     private final Map<String, GarblerAnalyzer<Comparable>> analyzers;
@@ -56,11 +56,11 @@ public final class GarblerLibrary {
 
     /**
      * Creates an instance with no output filter and a case-insensitive input
-     * filter. By default, this creates a delimiter regex of [^\\w`'-]+
+     * filter.
      *
      */
     public GarblerLibrary() {
-        this("[^\\w`'-]+", GarblerTranslator.caseInsensitive);
+        this(DEFAULT_DELIM, GarblerTranslator.caseInsensitive);
     }
 
     /**
@@ -76,10 +76,23 @@ public final class GarblerLibrary {
     /**
      * Creates an instance with custom input and output filters
      *
+     * @param filter the input filter
+     */
+    public GarblerLibrary(GarblerTranslator filter) {
+        this(DEFAULT_DELIM, filter);
+    }
+
+    /**
+     * Creates an instance with custom input and output filters
+     *
      * @param delim delimiter string to use when parsing text
      * @param filter the input filter
      */
     public GarblerLibrary(String delim, GarblerTranslator filter) {
+        if (filter == null) {
+            throw new IllegalArgumentException("Null translator not allowed");
+        }
+
         this.analyzers = new HashMap();
         this.filter = filter;
         this.delim = delim;
@@ -109,6 +122,7 @@ public final class GarblerLibrary {
         lock = true;
         int count = 0;
         String filtered = filter.transpose(text);
+
         String[] words = delim == null ? filtered.split(this.delim) : filtered.split(delim);
         for (String word : words) {
             for (GarblerAnalyzer analyzer : analyzers.values()) {
@@ -191,6 +205,8 @@ public final class GarblerLibrary {
 
             lock = true;
         } catch (Exception e) {
+            System.out.println("Error parsing data");
+            e.printStackTrace();
         }
         return lock;
     }
@@ -306,10 +322,10 @@ public final class GarblerLibrary {
      * given keys:<br>
      * <p>
      * LETTERS : LetterInfluenceAnalyzer<br>
- WORDLENGTH : WordLengthDistributionAnalyzer<br>
- FIRSTCHAR : InitialCharDistributionAnalyzer<br>
+     * WORDLENGTH : WordLengthDistributionAnalyzer<br>
+     * FIRSTCHAR : InitialCharDistributionAnalyzer<br>
      * ENDINGS : WordEndAnalyzer<br>
- CHARCORRELATION : WordLengthCorrelationAnalyzer<BR>
+     * CHARCORRELATION : WordLengthCorrelationAnalyzer<BR>
      *
      */
     public void loadDefaults() {
@@ -325,10 +341,10 @@ public final class GarblerLibrary {
      * given keys:<br>
      * <p>
      * LETTERS : LetterInfluenceAnalyzer<br>
- WORDLENGTH : WordLengthDistributionAnalyzer<br>
- FIRSTCHAR : InitialCharDistributionAnalyzer<br>
+     * WORDLENGTH : WordLengthDistributionAnalyzer<br>
+     * FIRSTCHAR : InitialCharDistributionAnalyzer<br>
      * ENDINGS : WordEndAnalyzer<br>
- CHARCORRELATION : WordLengthCorrelationAnalyzer<BR>
+     * CHARCORRELATION : WordLengthCorrelationAnalyzer<BR>
      *
      * @param radius radius of influence
      * @param letterInfluence letter influence factor

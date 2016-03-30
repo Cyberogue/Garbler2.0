@@ -54,7 +54,7 @@ public abstract class GarblerScript {
     public String buffer;
     public int iterations;
 
-    private final GarblerTranslator out;
+    private GarblerTranslator out;
 
     /**
      * Creates an instance with no output filtering
@@ -69,6 +69,13 @@ public abstract class GarblerScript {
      * @param out output filter
      */
     public GarblerScript(GarblerTranslator out) {
+        this.out = out;
+    }
+
+    public void setOutput(GarblerTranslator out) {
+        if (out == null) {
+            throw new IllegalArgumentException("Null translator not allowed");
+        }
         this.out = out;
     }
 

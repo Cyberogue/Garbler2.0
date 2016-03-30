@@ -108,7 +108,12 @@ public abstract class HeatMapAnalysis {
             return new HeatMap();
         }
 
-        HeatMap<K> result = new HeatMap(maps[0].size());    // Minimize rewrites
+        HeatMap<K> result;
+        if (maps[0] == null) {
+            result = new HeatMap();
+        } else {
+            result = new HeatMap(maps[0].size());
+        }
         float multiplier = 1f / maps.length;
 
         for (HeatMap<K> map : maps) {
@@ -142,8 +147,13 @@ public abstract class HeatMapAnalysis {
         if (maps.length == 0) {
             return new HeatMap();
         }
+        HeatMap<K> result;
+        if (maps[0] == null) {
+            result = new HeatMap();
+        } else {
+            result = new HeatMap(maps[0].size());
+        }
 
-        HeatMap<K> result = new HeatMap(maps[0].size());    // Attempt to minimize rewrites
         float kn = clamp0To1(k);
         float weight = 0;
 

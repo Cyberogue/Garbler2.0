@@ -40,7 +40,7 @@ public class WordLengthCorrelationAnalyzer implements GarblerAnalyzer<Integer> {
 
     @Override
     public void analyze(String word) {
-        if (word.length() < 0) {
+        if (word.isEmpty()) {
             return;
         }
 

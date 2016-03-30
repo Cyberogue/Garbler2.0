@@ -25,11 +25,13 @@ package me.aliceq.garbler.samples;
 
 import me.aliceq.garbler.GarblerLibrary;
 import me.aliceq.garbler.GarblerScript;
+import me.aliceq.garbler.GarblerTranslator;
 import me.aliceq.garbler.analyzer.WordLengthCorrelationAnalyzer;
 import me.aliceq.garbler.analyzer.LetterInfluenceAnalyzer;
 import me.aliceq.garbler.analyzer.WordLengthDistributionAnalyzer;
 import me.aliceq.garbler.analyzer.InitialCharDistributionAnalyzer;
 import me.aliceq.garbler.analyzer.EndingDistributionAnalyzer;
+import me.aliceq.heatmap.HeatMapAnalysis;
 
 /**
  *
@@ -41,7 +43,7 @@ public class BasicSample {
         // Create a new library and load it
         GarblerLibrary library = new GarblerLibrary();
 
-        library.addAnalyzer("Influence", new LetterInfluenceAnalyzer());
+        library.addAnalyzer("Influence", new LetterInfluenceAnalyzer(4, HeatMapAnalysis.SQRT_HALF));
         library.addAnalyzer("WordLength", new WordLengthCorrelationAnalyzer());
         library.addAnalyzer("FirstChar", new InitialCharDistributionAnalyzer());
         library.addAnalyzer("WordEnding", new EndingDistributionAnalyzer());
@@ -50,12 +52,24 @@ public class BasicSample {
         System.out.println(library);
 
         // Analyze from files
-        library.analyzeFromFile("seeds/loremipsum.txt");
-        //  library.analyzeFromFile("seeds/kafka.txt");
+        library.analyzeFromFile("seeds/lorem_japan.txt");
+        //library.analyzeFromFile("seeds/pangram.txt");
+        //library.analyzeFromFile("seeds/kafka.txt");
 
         // Create a new script and run it
-        for (int i = 0; i < 4; i++) {
-            library.run(new BasicSampleScript(), 8);
+        BasicSampleScript script = new BasicSampleScript();
+        try {
+          //  script.setOutput(GarblerTranslator.createFromFile("alien.gtf"));
+        } catch (Exception e) {
+
+        }
+
+        for (int i = 0; i < 5; i++) {
+            try {
+                library.run(script, 8);
+            } catch (Exception e) {
+
+            }
         }
     }
 }

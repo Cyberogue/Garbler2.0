@@ -23,7 +23,6 @@
  */
 package me.aliceq.garbler.samples;
 
-import java.util.Map;
 import me.aliceq.garbler.GarblerScript;
 import me.aliceq.heatmap.HeatMap;
 import me.aliceq.heatmap.HeatMapAnalysis;
