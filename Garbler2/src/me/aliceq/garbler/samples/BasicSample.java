@@ -24,13 +24,14 @@
 package me.aliceq.garbler.samples;
 
 import me.aliceq.garbler.GarblerLibrary;
-import me.aliceq.garbler.GarblerScript;
 import me.aliceq.garbler.GarblerTranslator;
+import me.aliceq.garbler.analyzer.AlphabetAnalyzer;
+import me.aliceq.garbler.analyzer.CharEndPositionAnalyzer;
 import me.aliceq.garbler.analyzer.WordLengthCorrelationAnalyzer;
 import me.aliceq.garbler.analyzer.LetterInfluenceAnalyzer;
-import me.aliceq.garbler.analyzer.WordLengthDistributionAnalyzer;
 import me.aliceq.garbler.analyzer.InitialCharDistributionAnalyzer;
-import me.aliceq.garbler.analyzer.EndingDistributionAnalyzer;
+import me.aliceq.garbler.analyzer.CommonEndingAnalyzer;
+import me.aliceq.garbler.analyzer.RepeatLetterAnalyzer;
 import me.aliceq.heatmap.HeatMapAnalysis;
 
 /**
@@ -43,16 +44,20 @@ public class BasicSample {
         // Create a new library and load it
         GarblerLibrary library = new GarblerLibrary();
 
-        library.addAnalyzer("Influence", new LetterInfluenceAnalyzer(4, HeatMapAnalysis.SQRT_HALF));
+        library.addAnalyzer("Influence", new LetterInfluenceAnalyzer(3, HeatMapAnalysis.SQRT_HALF));
+        library.addAnalyzer("CommonEndings", new CommonEndingAnalyzer(3));
         library.addAnalyzer("WordLength", new WordLengthCorrelationAnalyzer());
-        library.addAnalyzer("FirstChar", new InitialCharDistributionAnalyzer());
-        library.addAnalyzer("WordEnding", new EndingDistributionAnalyzer(3));
         library.addAnalyzer("LengthCorrelation", new WordLengthCorrelationAnalyzer());
+        library.addAnalyzer("CharBegin", new InitialCharDistributionAnalyzer());
+        library.addAnalyzer("CharEnd", new CharEndPositionAnalyzer());
+        library.addAnalyzer("Alphabet", new AlphabetAnalyzer());
+        library.addAnalyzer("Repetitions", new RepeatLetterAnalyzer());
 
         System.out.println(library);
 
         // Analyze from files
-        library.analyzeFromFile("seeds/alice.txt");
+        int count = library.analyzeFromFile("seeds/svenska.txt");
+        library.analyzeFromFile("seeds/vietcraft.txt", count);
 
         // Create a new script and run it
         BasicSampleScript script = new BasicSampleScript();
@@ -63,7 +68,7 @@ public class BasicSample {
         }
 
         for (int i = 0; i < 10; i++) {
-            library.run(script, 30);
+            library.run(script, 10);
         }
     }
 }

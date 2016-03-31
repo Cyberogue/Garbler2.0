@@ -33,7 +33,9 @@ import me.aliceq.heatmap.HeatMapAnalysis;
  */
 public class BasicSampleScript extends GarblerScript {
 
+    private java.util.Random rand = new java.util.Random();
     long startTime = 0;
+    boolean skipEnd = false;
 
     @Override
     public void onStart() {
@@ -48,13 +50,16 @@ public class BasicSampleScript extends GarblerScript {
     @Override
     public void preIterate(String context) {
         // Extract the initial character
-        char seed = (Character) HeatMapAnalysis.randomFromCDF(next("FirstChar", context));
+        char seed = (Character) HeatMapAnalysis.randomFromCDF(next("CharBegin", context));
         buffer += seed;
 
         // And find the word length
         HeatMap map = HeatMapAnalysis.trim(next("WordLength", context), 0.05f); // Trim low values
         int length = (Integer) HeatMapAnalysis.randomFromCDF(map);
-        iterations = length - 2;    // Room for an ending
+        iterations = length;    // First character
+
+        // Enable ending
+        skipEnd = false;
     }
 
     @Override
@@ -62,14 +67,37 @@ public class BasicSampleScript extends GarblerScript {
         // Extract the next letter and add it
         Character next = (Character) HeatMapAnalysis.randomFromCDF(next("Influence", context));
         if (next != null) {
-            buffer += next;
+            HeatMap map = next("Repetitions", context, next.toString());
+            float value = map.getValue(next);
+            if (value < 0.25 && value > 0 && rand.nextFloat() <= value) {
+                // pull again
+                next = (Character) HeatMapAnalysis.randomFromCDF(next("Influence", context));
+            }
+
+            if (next != null) {
+                buffer += next;
+            }
+        }
+
+        // See if we should terminate
+        HeatMap map = next("CharEnd", context);
+        float threshold = map.getValue(0);
+        if (threshold
+                > 0.5 && rand.nextFloat()
+                < threshold) {
+            skipEnd = true;
+            iterations = 0;
         }
     }
 
     @Override
     public void postIterate(String context) {
+        if (skipEnd) {
+            return;
+        }
+
         // See if an ending exists 
-        HeatMap map = next("WordEnding", context);
+        HeatMap map = next("CommonEndings", context);
         if (map != null) {
             buffer += (String) HeatMapAnalysis.randomKey(map);
         }

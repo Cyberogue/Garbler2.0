@@ -44,7 +44,7 @@ import me.aliceq.heatmap.HeatMap;
  * buffer : String : A buffer of characters for word creation. During onIterate,
  * any modifications to the word should be done here.<br>
  * iterations : int : The number of times to call onIterate. This should be set
- * during preIterat. Any changes done during iteration will be ignored.<br>
+ * during preIterat.<br>
  *
  * @author Alice Quiros <email@aliceq.me>
  */
@@ -83,8 +83,7 @@ public abstract class GarblerScript {
         buffer = "";
         iterations = 1;
         preIterate(context);
-        final int iter_lock = iterations;
-        for (int i = 0; i < iter_lock; i++) {
+        for (int i = 0; i < iterations; i++) {
             onIterate(context);
         }
         postIterate(context);
@@ -156,7 +155,7 @@ public abstract class GarblerScript {
     }
 
     /**
-     * Retrieves the next set of data from a stored analyzer using hte current
+     * Retrieves the next set of data from a stored analyzer using the current
      * buffer data. This is identical to calling analyzer(key).next(context,
      * buffer).
      *
@@ -168,5 +167,21 @@ public abstract class GarblerScript {
      */
     public final HeatMap<? extends Comparable> next(final String key, String context) {
         return analyzer(key).next(context, buffer);
+    }
+    
+     /**
+     * Retrieves the next set of data from a stored analyzer using the current
+     * buffer data. This is identical to calling analyzer(key).next(context,
+     * wordPrefix).
+     *
+     * @param key the key the analyzer is under
+     * @param context context to pass to the analyzer, if any
+     * @param wordPrefix the word context to use
+     * @return a HeatMap of data from the desired analyzer
+     * @throws IllegalArgumentException if an invalid (non-existent) key is
+     * provided
+     */
+    public final HeatMap<? extends Comparable> next(final String key, String context, String wordPrefix) {
+        return analyzer(key).next(context, wordPrefix);
     }
 }

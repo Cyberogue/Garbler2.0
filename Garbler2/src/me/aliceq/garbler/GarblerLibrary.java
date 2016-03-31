@@ -34,7 +34,7 @@ import me.aliceq.garbler.analyzer.WordLengthCorrelationAnalyzer;
 import me.aliceq.garbler.analyzer.LetterInfluenceAnalyzer;
 import me.aliceq.garbler.analyzer.WordLengthDistributionAnalyzer;
 import me.aliceq.garbler.analyzer.InitialCharDistributionAnalyzer;
-import me.aliceq.garbler.analyzer.EndingDistributionAnalyzer;
+import me.aliceq.garbler.analyzer.CommonEndingAnalyzer;
 
 /**
  * Class containing analyzers for a Garbler program. In addition, a library
@@ -44,7 +44,7 @@ import me.aliceq.garbler.analyzer.EndingDistributionAnalyzer;
  */
 public final class GarblerLibrary {
 
-    public static String DEFAULT_DELIM = "[\\s_;:\"0-9\\[\\]()<>]+";
+    public static String DEFAULT_DELIM = "[\\s_;:\"„0-9\\[\\]()<>]+";
 
     private boolean selffeed = false;
     private final Map<String, GarblerAnalyzer<Comparable>> analyzers;
@@ -324,7 +324,7 @@ public final class GarblerLibrary {
         addAnalyzer("LETTERS", new LetterInfluenceAnalyzer());
         addAnalyzer("WORDLENGTH", new WordLengthDistributionAnalyzer());
         addAnalyzer("FIRSTCHAR", new InitialCharDistributionAnalyzer());
-        addAnalyzer("ENDINGS", new EndingDistributionAnalyzer());
+        addAnalyzer("ENDINGS", new CommonEndingAnalyzer());
         addAnalyzer("CHARCORRELATION", new WordLengthCorrelationAnalyzer());
     }
 
@@ -349,7 +349,7 @@ public final class GarblerLibrary {
         addAnalyzer("LETTERS", new LetterInfluenceAnalyzer(radius, letterInfluence));
         addAnalyzer("WORDLENGTH", new WordLengthDistributionAnalyzer());
         addAnalyzer("FIRSTCHAR", new InitialCharDistributionAnalyzer());
-        addAnalyzer("ENDINGS", new EndingDistributionAnalyzer(radius));
+        addAnalyzer("ENDINGS", new CommonEndingAnalyzer(radius));
         addAnalyzer("CHARCORRELATION", new WordLengthCorrelationAnalyzer());
     }
 

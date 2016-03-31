@@ -27,26 +27,25 @@ import me.aliceq.garbler.GarblerAnalyzer;
 import me.aliceq.heatmap.HeatMap;
 
 /**
- * Analyzer which simply keeps track of how often different letters are used as
- * the first letter in a word
+ * Analyzer which simply stores and keeps track of all the characters used
+ * within the language and their frequency of use.
  *
  * @author Alice Quiros <email@aliceq.me>
  */
-public class InitialCharDistributionAnalyzer implements GarblerAnalyzer<Character> {
+public class AlphabetAnalyzer implements GarblerAnalyzer {
 
     private final HeatMap<Character> map = new HeatMap();
 
     @Override
-    public void analyze(String word) {
-        if (word.isEmpty()) {
-            return;
-        }
 
-        map.increment(word.charAt(0));
+    public void analyze(String word) {
+        for (int i = 0; i < word.length(); i++) {
+            map.increment(word.charAt(i));
+        }
     }
 
     @Override
-    public HeatMap<Character> next(String context, String wordPrefix) {
+    public HeatMap next(String context, String wordPrefix) {
         return map;
     }
 
@@ -59,4 +58,5 @@ public class InitialCharDistributionAnalyzer implements GarblerAnalyzer<Characte
     public String toString(){
         return map.toString();
     }
+
 }

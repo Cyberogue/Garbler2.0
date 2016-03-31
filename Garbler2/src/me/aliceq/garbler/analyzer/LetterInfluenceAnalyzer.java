@@ -28,7 +28,6 @@ import java.util.Map;
 import me.aliceq.garbler.GarblerAnalyzer;
 import me.aliceq.heatmap.HeatMap;
 import me.aliceq.heatmap.HeatMapAnalysis;
-import me.aliceq.heatmap.HeatMapDataSet;
 
 /**
  * Analyzer module which maintains information on each character's influence on
