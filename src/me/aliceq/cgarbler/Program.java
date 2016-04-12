@@ -328,6 +328,7 @@ public class Program {
             lines = Integer.parseUnsignedInt(split[0]);
         } catch (Exception e) {
             DisplayError("garble");
+            return;
         }
 
         int startIndex = 2;
