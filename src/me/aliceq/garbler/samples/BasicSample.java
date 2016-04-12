@@ -24,7 +24,6 @@
 package me.aliceq.garbler.samples;
 
 import me.aliceq.garbler.GarblerLibrary;
-import me.aliceq.garbler.GarblerTranslator;
 import me.aliceq.garbler.analyzer.AlphabetAnalyzer;
 import me.aliceq.garbler.analyzer.CharEndPositionAnalyzer;
 import me.aliceq.garbler.analyzer.WordLengthCorrelationAnalyzer;

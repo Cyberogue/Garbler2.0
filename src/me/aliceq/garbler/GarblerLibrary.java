@@ -51,7 +51,7 @@ public final class GarblerLibrary {
     private boolean lock = false;
     private int analyzed = 0;
 
-    private final GarblerTranslator filter;
+    private GarblerTranslator filter;
 
     /**
      * Creates an instance with no output filter and a case-insensitive input
@@ -63,7 +63,7 @@ public final class GarblerLibrary {
     }
 
     /**
-     * Creates an instance with custom input and output filters
+     * Creates an instance with custom input filter
      *
      * @param filter the input filter
      */
@@ -73,6 +73,18 @@ public final class GarblerLibrary {
         }
 
         this.analyzers = new HashMap();
+        this.filter = filter;
+    }
+
+    /**
+     * Sets the input filter for the library
+     *
+     * @param filter the input filter
+     */
+    public void setFilter(GarblerTranslator filter) {
+        if (filter == null) {
+            throw new IllegalArgumentException("Null translator not allowed");
+        }
         this.filter = filter;
     }
 
