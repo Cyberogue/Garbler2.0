@@ -279,7 +279,7 @@ public final class GarblerLibrary {
             script.library.analyze(s);
         }
 
-        return script.buffer;
+        return s;
     }
 
     /**

@@ -61,6 +61,7 @@ public class RepeatLetterAnalyzer implements GarblerAnalyzer<Character> {
             } else if (repetitions > 0) {
                 // Store and continue);
                 int index = (repetitions > position.length ? position.length : repetitions) - 1;
+                if (position != null)
                 position[index].increment(c);
                 repetitions = 0;
             }
