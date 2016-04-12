@@ -250,7 +250,7 @@ public final class GarblerLibrary {
      * @throws IllegalStateException if nothing has been analyzed
      */
     public String run(final GarblerScript script, final int wordCount) {
-        run(script, wordCount, ' ');
+        return run(script, wordCount, ' ');
     }
 
     /**
