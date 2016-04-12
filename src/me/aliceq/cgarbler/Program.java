@@ -21,7 +21,7 @@
  * OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN
  * THE SOFTWARE.
  */
-package me.aliceq.cgarbler2;
+package me.aliceq.cgarbler;
 
 import java.io.File;
 import java.io.IOException;
