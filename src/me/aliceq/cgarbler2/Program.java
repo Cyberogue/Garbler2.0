@@ -23,12 +23,14 @@
  */
 package me.aliceq.cgarbler2;
 
+import java.io.File;
 import java.io.IOException;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 import me.aliceq.garbler.GarblerLibrary;
+import me.aliceq.garbler.GarblerScript;
 import me.aliceq.garbler.GarblerTranslator;
 import me.aliceq.garbler.analyzer.AlphabetAnalyzer;
 import me.aliceq.garbler.analyzer.CharEndPositionAnalyzer;
@@ -37,6 +39,7 @@ import me.aliceq.garbler.analyzer.InitialCharDistributionAnalyzer;
 import me.aliceq.garbler.analyzer.LetterInfluenceAnalyzer;
 import me.aliceq.garbler.analyzer.RepeatLetterAnalyzer;
 import me.aliceq.garbler.analyzer.WordLengthCorrelationAnalyzer;
+import me.aliceq.garbler.scripts.DefaultGeneratingScript;
 import me.aliceq.heatmap.HeatMapAnalysis;
 
 /**
@@ -48,6 +51,7 @@ import me.aliceq.heatmap.HeatMapAnalysis;
 public class Program {
 
     private GarblerLibrary library;
+    private GarblerTranslator output = GarblerTranslator.None;
     private int acount = Integer.MAX_VALUE;
 
     protected void HelpHandler(String args) {
@@ -75,16 +79,22 @@ public class Program {
                     case "-liradius":
                         if (++i < split.length) {
                             lirad = Integer.parseUnsignedInt(split[i]);
+                        } else {
+                            System.out.println("Insufficient parameters");
                         }
                         break;
                     case "-lifactor":
                         if (++i < split.length) {
                             lifac = Float.parseFloat(split[i]);
+                        } else {
+                            System.out.println("Insufficient parameters");
                         }
                         break;
                     case "-ceradius":
                         if (++i < split.length) {
                             cerad = Integer.parseUnsignedInt(split[i]);
+                        } else {
+                            System.out.println("Insufficient parameters");
                         }
                         break;
                     case "-default":
@@ -121,13 +131,14 @@ public class Program {
         System.out.println("  feeding\t" + library.isSelfFeeding());
     }
 
-    protected void ClearHandler() {
+    protected void DumpHandler() {
         if (!VerifyLib()) {
             return;
         }
 
         library.clear();
-        System.out.println("Emptied library contents");
+        output = GarblerTranslator.None;
+        System.out.println("Cleared contents");
     }
 
     protected void FeedHandler(String args) {
@@ -147,17 +158,23 @@ public class Program {
                     if (++i < split.length) {
                         source = split[i];
                         isFile = true;
+                    } else {
+                        System.out.println("Insufficient parameters");
                     }
                     break;
                 case "-t":
                     if (++i < split.length) {
                         source = split[i];
                         isFile = false;
+                    } else {
+                        System.out.println("Insufficient parameters");
                     }
                     break;
                 case "-d":
                     if (++i < split.length) {
                         delim = split[i];
+                    } else {
+                        System.out.println("Insufficient parameters");
                     }
                     break;
                 case "-C":
@@ -170,6 +187,8 @@ public class Program {
                         } catch (Exception e) {
 
                         }
+                    } else {
+                        System.out.println("Insufficient parameters");
                     }
                     break;
             }
@@ -181,14 +200,13 @@ public class Program {
         }
 
         int analyzed;
-        if (delim == null) {
-            if (isFile) {
-                analyzed = library.analyzeFromFile(source, count);
-            } else {
-                analyzed = library.analyze(source, count);
+        if (isFile) {
+            File file = new File(source);
+            if (!file.exists()) {
+                System.out.println("File " + source + " does not exist or could not be read.");
+                return;
             }
-        } else if (isFile) {
-            analyzed = library.analyzeFromFile(source, delim, count);
+            analyzed = library.analyzeFromFile(file, delim, count);
         } else {
             analyzed = library.analyze(source, delim, count);
         }
@@ -204,31 +222,169 @@ public class Program {
         // Extract configuration
         String[] split = SplitArgs(args);
 
-        if (split.length == 0) {
+        if (split.length < 2) {
             DisplayError("filter");
+            return;
         }
 
-        String mode = split[0];
-        String source = split.length < 2 ? null : split[1];
+        String dir = split[0];
+        String mode = split[1];
+        String source = split.length < 3 ? null : split[2];
+
+        GarblerTranslator filter = GarblerTranslator.None;
 
         switch (mode) {
             case "-c":
-                library.setFilter(GarblerTranslator.None);
+                filter = GarblerTranslator.None;
                 break;
             case "-w":
-                library.setFilter(GarblerTranslator.caseInsensitive);
+                filter = GarblerTranslator.caseInsensitive;
                 break;
             case "-f":
                 try {
-                    library.setFilter(GarblerTranslator.createFromFile(source));
+                    filter = GarblerTranslator.createFromFile(source);
                 } catch (IOException e) {
-                    System.out.println("Unable to read translator file");
+                    System.out.println("File " + source + " does not exist or could not be read.");
+                    filter = null;
                 }
                 break;
             default:
                 DisplayError("filter");
                 break;
         }
+
+        if (filter != null) {
+            switch (dir) {
+                case "-io":
+                case "-oi":
+                    library.setFilter(filter);
+                    output = filter;
+                    System.out.println("Set inout filter");
+                    break;
+                case "-o":
+                    output = filter;
+                    System.out.println("Set out filter");
+                    break;
+                case "-i":
+                    library.setFilter(filter);
+                    System.out.println("Set in filter");
+                    break;
+            }
+        }
+        
+        if (filter != null) {
+            System.out.println(filter.transpose("abcdefghijklmnopqrstuvwxyz"));
+        }
+    }
+
+    protected void ConfigHandler(String args) {
+        // Extract configuration
+        String[] split = SplitArgs(args);
+
+        String mode = split[0];
+        String source = split.length < 2 ? null : split[1];
+
+        if (split.length < 2) {
+            DisplayError("config");
+            return;
+        }
+
+        if (split[0].equals("-sf")) {
+            switch (split[1]) {
+                case "true":
+                case "on":
+                case "1":
+                    System.out.println("Self feeding on");
+                    library.selfFeed(true);
+                    break;
+                case "false":
+                case "off":
+                case "0":
+                    System.out.println("Self feeding off");
+                    library.selfFeed(false);
+                    break;
+                default:
+                    DisplayError("config");
+            }
+        }
+    }
+
+    protected void GarbleHandler(String args) {
+        if (!VerifyLib()) {
+            return;
+        } else if (library.analyzedCount() == 0) {
+            System.out.println("Nothing has been analyzed yet.");
+            return;
+        }
+
+        // Extract configuration
+        String[] split = SplitArgs(args);
+        int words = 8, lines = 1;
+        boolean selffeed = library.isSelfFeeding();
+        String filter = "";
+        char separator = ' ';
+
+        try {
+            lines = Integer.parseUnsignedInt(split[0]);
+        } catch (Exception e) {
+            DisplayError("garble");
+        }
+
+        int startIndex = 2;
+        try {
+            words = Integer.parseUnsignedInt(split[1]);
+        } catch (Exception e) {
+            startIndex = 1;
+        }
+
+        for (int i = startIndex; i < split.length; i++) {
+            try {
+                switch (split[i]) {
+                    case "-w":
+                    case "-o":
+                        filter = split[i];
+                        break;
+                    case "-s":
+                        if (++i < split.length) {
+                            if (split[i].length() == 1) {
+                                separator = split[i].charAt(0);
+                            } else {
+                                DisplayError("garble");
+                            }
+                        } else {
+                            System.out.println("Insufficient parameters");
+                        }
+                        break;
+                }
+            } catch (Exception e) {
+
+            }
+        }
+
+        GarblerTranslator translator = output;
+        switch (filter) {
+            case "-w":
+                translator = GarblerTranslator.caseInsensitive;
+                break;
+            case "-o":
+                translator = output;
+                break;
+        }
+
+        GarblerScript script = new DefaultGeneratingScript();
+        script.setOutput(output);
+
+        long startTime = System.currentTimeMillis();
+        for (int i = 0; i < lines; i++) {
+            String s = library.run(script, words, separator);
+            long endTime = System.currentTimeMillis();
+
+            System.out.println("[" + (endTime - startTime) + "ms] " + s);
+            startTime = endTime;
+        }
+
+        // Reset self feeding
+        library.selfFeed(selffeed);
     }
 
     /**
@@ -249,13 +405,20 @@ public class Program {
             case "INFO":
                 InfoHandler();
                 break;
-            case "CLEAR":
-                ClearHandler();
+            case "DUMP":
+                DumpHandler();
+                break;
             case "FEED":
                 FeedHandler(args);
                 break;
             case "FILTER":
                 FilterHandler(args);
+                break;
+            case "CONFIG":
+                ConfigHandler(args);
+                break;
+            case "GARBLE":
+                GarbleHandler(args);
                 break;
             case "QUIT":
             case "EXIT":

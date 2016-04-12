@@ -53,6 +53,10 @@ public class Main {
             while (true) {
                 String line = reader.readLine();
                 String tag, pargs;
+                
+                if (line.isEmpty()){
+                    continue;
+                }
 
                 int i = line.indexOf(' ');
                 if (i >= 0) {

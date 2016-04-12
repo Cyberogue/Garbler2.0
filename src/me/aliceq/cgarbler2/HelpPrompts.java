@@ -32,16 +32,24 @@ import java.util.HashMap;
  */
 public abstract class HelpPrompts {
 
+    /**
+     * DESCRIPTIONS
+     */
     private static final String HELP_MSG = "Displays information about a specific command.";
     private static final String QUIT_MSG = "Exits the program with error code 0";
 
     private static final String INIT_MSG = "Initializes the program's library and script. If no arguments are provided this loads the default script";
     private static final String INFO_MSG = "Displays information about the current program.";
-    private static final String CLEAR_MSG = "Clears all analyzed data.";
+    private static final String DUMP_MSG = "Clears all analyzed data and filters.";
 
     private static final String FEED_MSG = "Feeds a chunk of text to the program.";
     private static final String FILTER_MSG = "Sets the input translator filter. By default Garbler uses a case-insensitive filter.";
+    private static final String CONFIG_MSG = "Modifies a single library value.";
+    private static final String GARBLE_MSG = "Generates new text based on the parsed data.";
 
+    /**
+     * USAGE MESSAGES
+     */
     private static final String HELP_USAGE = "\thelp <command>";
 
     private static final String INIT_USAGE = "\tinit [-default | [-liradius <value>] [-lifactor <value>] [-ceradius <value>]]\n"
@@ -58,11 +66,24 @@ public abstract class HelpPrompts {
             + "\t-C : sets the analyze count to the previous number of words analyzed\n"
             + "\t-d <delim> : custom delimiter to split words with";
 
-    private static final String FILTER_USAGE = "\tfilter <-c | -w | -f <file>>\n\n"
-            + "\t-c : clears the input filter (no input filtering)\n"
-            + "\t-w : case-insensitive input filtering\n"
-            + "\t-f <file> : custom input filter from file. Each line in a translator file should be of the form oldChars=newChar, where oldChars is a comma-separated list of keys. "
+    private static final String FILTER_USAGE = "\tfilter <-o | -i | -io> <-c | -w | -f <file>>\n\n"
+            + "\t-o : set the output filter\n"
+            + "\t-i : set the input filter\n"
+            + "\t-io : set both output and input filters"
+            + "\t-c : clears the filter (no input filtering)\n"
+            + "\t-w : sets case-insensitive filtering\n"
+            + "\t-f <file> : sets a custom filter from file. Each line in a translator file should be of the form oldChars=newChar, where oldChars is a comma-separated list of keys. "
             + "\n\t\tFor example, to transpose [q,p,d,b] into d's the file should contain the entry q,p,b=d";
+
+    private static final String CONFIG_USAGE = "config <-sf <true|false>>\n\n"
+            + "\t-sf <true|false> : toggle self-feeding on or off";
+
+    private static final String GARBLE_USAGE = "\tgarble <words> [<lines>] [-s <string>] [-sf] [-w | -f <file>]\n\n"
+            + "\tgarble <lines> : the number of lines to generate.\n"
+            + "\t[<count>] : the number of words to generate per line. By default this is 8.\n"
+            + "\t-s <char> : separator to use between words. Default is a single space."
+            + "\t-w : use case-insensitive output filtering.\n"
+            + "\t-o : use internal output filter. See 'help filter' for information on how to set this filter.";
 
     private static final HashMap<String, String> DESCRIPTORS = new HashMap() {
         {
@@ -72,10 +93,12 @@ public abstract class HelpPrompts {
 
             put("INIT", INIT_MSG);
             put("INFO", INFO_MSG);
-            put("CLEAR", CLEAR_MSG);
+            put("DUMP", DUMP_MSG);
 
             put("FEED", FEED_MSG);
             put("FILTER", FILTER_MSG);
+            put("CONFIG", CONFIG_MSG);
+            put("GARBLE", GARBLE_MSG);
         }
     };
 
@@ -85,6 +108,8 @@ public abstract class HelpPrompts {
             put("INIT", INIT_USAGE);
             put("FEED", FEED_USAGE);
             put("FILTER", FILTER_USAGE);
+            put("MODE", CONFIG_USAGE);
+            put("GARBLE", GARBLE_USAGE);
         }
     };
 
@@ -109,7 +134,7 @@ public abstract class HelpPrompts {
                 s += "\n\nUsage:\n" + usage;
             }
 
-            s += "\n\nEnd of help";
+            s += "\nEnd of help";
             return s;
         }
     }
