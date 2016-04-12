@@ -21,7 +21,7 @@
  * OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN
  * THE SOFTWARE.
  */
-package me.aliceq.garbler.samples;
+package me.aliceq.garbler.scripts;
 
 import me.aliceq.garbler.GarblerScript;
 import me.aliceq.heatmap.HeatMap;
@@ -31,7 +31,7 @@ import me.aliceq.heatmap.HeatMapAnalysis;
  *
  * @author Alice Quiros <email@aliceq.me>
  */
-public class BasicSampleScript extends GarblerScript {
+public class DefaultGeneratingScript extends GarblerScript {
 
     private java.util.Random rand = new java.util.Random();
     long startTime = 0;
