@@ -135,7 +135,6 @@ public class LetterInfluenceAnalyzer implements GarblerAnalyzer<Character> {
                 imap = maps; // Set the current heatmap
             }
 
-            // System.out.println(current.length);
             for (int j = i; j < i + letterCount; j++) {
                 int dif = j - i;
                 imap[dif].increment(word.charAt(j + 1));

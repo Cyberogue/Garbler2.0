@@ -106,7 +106,7 @@ public abstract class GarblerScript {
      * @param context the context created
      */
     public void onComplete(String context) {
-        System.out.println(context);
+        
     }
 
     /**

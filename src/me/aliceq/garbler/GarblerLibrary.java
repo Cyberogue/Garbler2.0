@@ -246,9 +246,10 @@ public final class GarblerLibrary {
      *
      * @param script script to run
      * @param wordCount number of words to generate
+     * @return the script's buffer after the script has finished running
      * @throws IllegalStateException if nothing has been analyzed
      */
-    public void run(final GarblerScript script, final int wordCount) {
+    public String run(final GarblerScript script, final int wordCount) {
         run(script, wordCount, ' ');
     }
 
@@ -259,9 +260,10 @@ public final class GarblerLibrary {
      * @param script script to run
      * @param wordCount number of words to generate
      * @param separator separator to place between words
+     * @return the script's buffer after the script has finished running
      * @throws IllegalStateException if nothing has been analyzed
      */
-    public synchronized void run(final GarblerScript script, final int wordCount, final char separator) {
+    public synchronized String run(final GarblerScript script, final int wordCount, final char separator) {
         if (analyzed == 0) {
             throw new IllegalStateException("Nothing has been analyzed");
         }
@@ -276,6 +278,8 @@ public final class GarblerLibrary {
         if (selffeed) {
             script.library.analyze(s);
         }
+
+        return script.buffer;
     }
 
     /**
@@ -319,50 +323,6 @@ public final class GarblerLibrary {
      */
     public boolean isSelfFeeding() {
         return this.selffeed;
-    }
-
-    /**
-     * Loads the default set of analyzers. These are the following under the
-     * given keys:<br>
-     * <p>
-     * LETTERS : LetterInfluenceAnalyzer<br>
-     * WORDLENGTH : WordLengthDistributionAnalyzer<br>
-     * FIRSTCHAR : InitialCharDistributionAnalyzer<br>
-     * ENDINGS : WordEndAnalyzer<br>
-     * CHARCORRELATION : WordLengthCorrelationAnalyzer<BR>
-     *
-     */
-    public void loadDefaults() {
-        addAnalyzer("LETTERS", new LetterInfluenceAnalyzer());
-        addAnalyzer("WORDLENGTH", new WordLengthDistributionAnalyzer());
-        addAnalyzer("FIRSTCHAR", new InitialCharDistributionAnalyzer());
-        addAnalyzer("ENDINGS", new CommonEndingAnalyzer());
-        addAnalyzer("CHARCORRELATION", new WordLengthCorrelationAnalyzer());
-    }
-
-    /**
-     * Loads the default set of analyzers. These are the following under the
-     * given keys:<br>
-     * <p>
-     * LETTERS : LetterInfluenceAnalyzer<br>
-     * WORDLENGTH : WordLengthDistributionAnalyzer<br>
-     * FIRSTCHAR : InitialCharDistributionAnalyzer<br>
-     * ENDINGS : WordEndAnalyzer<br>
-     * CHARCORRELATION : WordLengthCorrelationAnalyzer<BR>
-     *
-     * @param radius radius of influence
-     * @param letterInfluence letter influence factor
-     * @throws IllegalArgumentException if radius is less than 2
-     */
-    public void loadDefaults(int radius, float letterInfluence) {
-        if (radius < 2) {
-            throw new IllegalArgumentException("Radius has to be greater than 1");
-        }
-        addAnalyzer("LETTERS", new LetterInfluenceAnalyzer(radius, letterInfluence));
-        addAnalyzer("WORDLENGTH", new WordLengthDistributionAnalyzer());
-        addAnalyzer("FIRSTCHAR", new InitialCharDistributionAnalyzer());
-        addAnalyzer("ENDINGS", new CommonEndingAnalyzer(radius));
-        addAnalyzer("CHARCORRELATION", new WordLengthCorrelationAnalyzer());
     }
 
     /**

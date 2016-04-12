@@ -34,18 +34,7 @@ import me.aliceq.heatmap.HeatMapAnalysis;
 public class DefaultGeneratingScript extends GarblerScript {
 
     private java.util.Random rand = new java.util.Random();
-    long startTime = 0;
     boolean skipEnd = false;
-
-    @Override
-    public void onStart() {
-        startTime = System.currentTimeMillis();
-    }
-
-    @Override
-    public void onComplete(String context) {
-        System.out.println("[" + (System.currentTimeMillis() - startTime) + "ms] " + context);
-    }
 
     @Override
     public void preIterate(String context) {
