@@ -48,7 +48,7 @@ Sets the run-time configuration of the library. Currently the only option is to 
 
 A self-feeding library feeds itself any text that it generates.
 
-#Garble
+###Garble
 Generates a line or lines of text from the stored data and prints it to output. (TODO: print to file instead)
 
 ###Quit / Exit
