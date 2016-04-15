@@ -50,6 +50,8 @@ import me.aliceq.heatmap.HeatMapAnalysis;
  */
 public class Program {
 
+    protected final String INSUFFICIENT_PARAMETERS = "ERROR: Insufficient parameters.";
+    
     private GarblerLibrary library;
     private GarblerTranslator output = GarblerTranslator.None;
     private int acount = Integer.MAX_VALUE;
@@ -80,21 +82,24 @@ public class Program {
                         if (++i < split.length) {
                             lirad = Integer.parseUnsignedInt(split[i]);
                         } else {
-                            System.out.println("Insufficient parameters");
+                            System.out.println(INSUFFICIENT_PARAMETERS);
+                            return;
                         }
                         break;
                     case "-lifactor":
                         if (++i < split.length) {
                             lifac = Float.parseFloat(split[i]);
                         } else {
-                            System.out.println("Insufficient parameters");
+                            System.out.println(INSUFFICIENT_PARAMETERS);
+                            return;
                         }
                         break;
                     case "-ceradius":
                         if (++i < split.length) {
                             cerad = Integer.parseUnsignedInt(split[i]);
                         } else {
-                            System.out.println("Insufficient parameters");
+                            System.out.println(INSUFFICIENT_PARAMETERS);
+                            return;
                         }
                         break;
                     case "-default":
@@ -159,7 +164,8 @@ public class Program {
                         source = split[i];
                         isFile = true;
                     } else {
-                        System.out.println("Insufficient parameters");
+                        System.out.println(INSUFFICIENT_PARAMETERS);
+                        return;
                     }
                     break;
                 case "-t":
@@ -167,14 +173,16 @@ public class Program {
                         source = split[i];
                         isFile = false;
                     } else {
-                        System.out.println("Insufficient parameters");
+                        System.out.println(INSUFFICIENT_PARAMETERS);
+                        return;
                     }
                     break;
                 case "-d":
                     if (++i < split.length) {
                         delim = split[i];
                     } else {
-                        System.out.println("Insufficient parameters");
+                        System.out.println(INSUFFICIENT_PARAMETERS);
+                        return;
                     }
                     break;
                 case "-C":
@@ -188,7 +196,8 @@ public class Program {
 
                         }
                     } else {
-                        System.out.println("Insufficient parameters");
+                        System.out.println(INSUFFICIENT_PARAMETERS);
+                        return;
                     }
                     break;
             }
@@ -230,6 +239,7 @@ public class Program {
         String dir = split[0];
         String mode = split[1];
         String source = split.length < 3 ? null : split[2];
+        String debug = "";
 
         GarblerTranslator filter = GarblerTranslator.None;
 
@@ -247,6 +257,8 @@ public class Program {
                     System.out.println("File " + source + " does not exist or could not be read.");
                     filter = null;
                 }
+                break;
+            case "-d":
                 break;
             default:
                 DisplayError("filter");
@@ -353,7 +365,8 @@ public class Program {
                                 DisplayError("garble");
                             }
                         } else {
-                            System.out.println("Insufficient parameters");
+                            System.out.println(INSUFFICIENT_PARAMETERS);
+                            return;
                         }
                         break;
                 }

@@ -66,14 +66,14 @@ public abstract class HelpPrompts {
             + "\t-C : sets the analyze count to the previous number of words analyzed\n"
             + "\t-d <delim> : custom delimiter to split words with";
 
-    private static final String FILTER_USAGE = "\tfilter <-o | -i | -io> <-c | -w | -f <file>>\n\n"
+    private static final String FILTER_USAGE = "\tfilter <-o | -i | -io> <-c | -w | -f <file>> [-d <<string> | -a-z | -A-Z | -0-9 | -aA0 >]\n\n"
             + "\t-o : set the output filter\n"
             + "\t-i : set the input filter\n"
             + "\t-io : set both output and input filters"
             + "\t-c : clears the filter (no input filtering)\n"
             + "\t-w : sets case-insensitive filtering\n"
             + "\t-f <file> : sets a custom filter from file. Each line in a translator file should be of the form oldChars=newChar, where oldChars is a comma-separated list of keys. "
-            + "\n\t\tFor example, to transpose [q,p,d,b] into d's the file should contain the entry q,p,b=d";
+            + "\n\t\tFor example, to transpose [q,p,d,b] into d's the file should contain the entry q,p,b=d.";
 
     private static final String CONFIG_USAGE = "config <-sf <true|false>>\n\n"
             + "\t-sf <true|false> : toggle self-feeding on or off";
@@ -84,7 +84,7 @@ public abstract class HelpPrompts {
             + "\t-s <char> : separator to use between words. Default is a single space."
             + "\t-w : use case-insensitive output filtering.\n"
             + "\t-o : use internal output filter. See 'help filter' for information on how to set this filter.";
-
+    
     private static final HashMap<String, String> DESCRIPTORS = new HashMap() {
         {
             put("HELP", HELP_MSG);

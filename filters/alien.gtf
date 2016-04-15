@@ -1,7 +1,17 @@
+# This is random and nonsensical to make things look alien-ish
+# there's no actual purpose or structure to this mapping
+
 a=æ
-b,w,u=v
+A=Æ
+w,u=v
+W,U=v
 b,p=þ
+B,P=Þ
 c,k=q
+C,K=Q
 g,j=y
+G,H=Y
 s=z
+S=Z
 l=x
+L=X
