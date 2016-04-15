@@ -113,6 +113,8 @@ public abstract class GarblerTranslator {
      * Each line in a translator file should be of the form oldChars=newChar,
      * where oldChars is a comma-separated list of keys. For example, to
      * transpose [c,k,q] into q's the file should contain the entry c,k=q
+     * 
+     * Additionally, lines starting with # are ignored as comments
      *
      * @param file the file to read from
      * @return a new GarblerTranslator instance
@@ -129,10 +131,9 @@ public abstract class GarblerTranslator {
         // Read line by line
         for (String line; (line = reader.readLine()) != null;) {
             // Check if empty
-            if (line.isEmpty()) {
+            if (line.isEmpty() || line.charAt(0) == '#') {
                 continue;
-            }
-
+            } 
             // Find the index of the equals
             int indexOf = line.indexOf('=');
 
@@ -201,6 +202,11 @@ public abstract class GarblerTranslator {
             } else {
                 return fromChar;
             }
+        }
+        
+        @Override
+        public String toString(){
+            return table.toString();
         }
     }
 
